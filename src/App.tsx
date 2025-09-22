@@ -15,10 +15,10 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
+    <Toaster /> {/* Moved Toaster outside TooltipProvider */}
+    <Sonner /> {/* Moved Sonner outside TooltipProvider */}
     <TooltipProvider>
-      <React.Fragment> {/* Wrap children in a Fragment */}
-        <Toaster />
-        <Sonner />
+      <div> {/* Keep div to wrap BrowserRouter */}
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
@@ -29,7 +29,7 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
-      </React.Fragment>
+      </div>
     </TooltipProvider>
   </QueryClientProvider>
 );
