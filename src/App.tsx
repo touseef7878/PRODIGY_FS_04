@@ -15,21 +15,19 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <Toaster /> {/* Moved Toaster outside TooltipProvider */}
-    <Sonner /> {/* Moved Sonner outside TooltipProvider */}
+    <Toaster />
+    <Sonner />
     <TooltipProvider>
-      <div> {/* Keep div to wrap BrowserRouter */}
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/login" element={<AuthLayout><LoginPage /></AuthLayout>} />
-            <Route path="/register" element={<AuthLayout><RegisterPage /></AuthLayout>} />
-            <Route path="/chat" element={<ChatPage />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </div>
+      <BrowserRouter> {/* BrowserRouter is now the direct child of TooltipProvider */}
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/login" element={<AuthLayout><LoginPage /></AuthLayout>} />
+          <Route path="/register" element={<AuthLayout><RegisterPage /></AuthLayout>} />
+          <Route path="/chat" element={<ChatPage />} />
+          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
 );
