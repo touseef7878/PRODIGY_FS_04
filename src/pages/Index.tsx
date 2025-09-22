@@ -17,6 +17,9 @@ const Index = () => {
           <Button asChild variant="outline">
             <Link to="/register">Register</Link>
           </Button>
+          <Button asChild>
+            <Link to="/chat">Go to Chat</Link> {/* Added link to chat page */}
+          </Button>
         </div>
       </div>
       <MadeWithDyad />
