@@ -19,7 +19,7 @@ interface ChatLayoutProps {
 const ChatLayout: React.FC<ChatLayoutProps> = ({
   sidebar,
   children,
-  defaultLayout = [265, 1000 - 265],
+  defaultLayout = [20, 80], // Changed to percentages
   defaultCollapsed = false,
   navCollapsedSize = 4,
 }) => {
