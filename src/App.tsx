@@ -1,5 +1,3 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
@@ -10,13 +8,18 @@ import AuthLayout from "./components/layout/AuthLayout";
 import ChatPage from "./pages/ChatPage";
 import React from "react"; // Import React for Fragment
 
+// Temporarily commented out Toaster and Sonner imports
+// import { Toaster } from "@/components/ui/toaster";
+// import { Toaster as Sonner } from "@/components/ui/sonner";
+
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <React.Fragment> {/* Wrap children in a Fragment */}
-      <Toaster />
-      <Sonner />
+    <React.Fragment>
+      {/* Temporarily removed Toaster and Sonner */}
+      {/* <Toaster /> */}
+      {/* <Sonner /> */}
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
