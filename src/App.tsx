@@ -5,7 +5,7 @@ import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import AuthLayout from "./components/layout/AuthLayout";
 import ChatPage from "./pages/ChatPage";
-import React from "react"; // Import React for Fragment
+import React from "react";
 
 // Temporarily commented out Toaster and Sonner imports
 // import { Toaster } from "@/components/ui/toaster";
