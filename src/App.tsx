@@ -6,6 +6,7 @@ import RegisterPage from "./pages/RegisterPage";
 import ChatPage from "./pages/ChatPage";
 import NotFound from "./pages/NotFound";
 import AuthLayout from "./components/layout/AuthLayout";
+import { Toaster } from "@/components/ui/sonner"; // Import Toaster
 
 const App = () => (
   <BrowserRouter>
@@ -30,6 +31,7 @@ const App = () => (
       <Route path="/chat" element={<ChatPage />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
+    <Toaster /> {/* Add Toaster here */}
   </BrowserRouter>
 );
 

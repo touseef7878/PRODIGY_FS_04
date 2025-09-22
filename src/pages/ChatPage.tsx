@@ -6,6 +6,7 @@ import Sidebar from '@/components/Sidebar';
 import { MadeWithDyad } from '@/components/made-with-dyad';
 import MessageInput from '@/components/MessageInput';
 import MessageList from '@/components/MessageList';
+import { showSuccess } from '@/utils/toast'; // Import showSuccess
 
 interface Message {
   id: string;
@@ -21,6 +22,7 @@ const ChatPage: React.FC = () => {
 
   const handleSelectChat = (chatId: string) => {
     setSelectedChatId(chatId);
+    showSuccess(`Selected chat: ${chatId}`); // Add this line to show a toast
     // Simulate loading messages for the selected chat
     setMessages([
       { id: 'm1', sender: 'Alice', text: `Hello from ${chatId}!`, avatarUrl: 'https://github.com/shadcn.png', isCurrentUser: false },
