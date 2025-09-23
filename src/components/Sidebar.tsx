@@ -99,7 +99,8 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onS
             .from('messages')
             .select('id', { count: 'exact' })
             .eq('chat_room_id', room.id)
-            .gt('created_at', lastReadAt);
+            .gt('created_at', lastReadAt)
+            .neq('sender_id', currentUserId); // Exclude current user's messages
 
           if (countError) {
             console.error("Error counting unread public messages:", countError);
@@ -108,11 +109,12 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onS
             console.log(`[Sidebar] Public Room ${room.name}: Unread count (after lastReadAt) = ${unread_count}`);
           }
         } else {
-          // If no read status, all messages are unread
+          // If no read status, all messages are unread (excluding current user's)
           const { count, error: countError } = await supabase
             .from('messages')
             .select('id', { count: 'exact' })
-            .eq('chat_room_id', room.id);
+            .eq('chat_room_id', room.id)
+            .neq('sender_id', currentUserId); // Exclude current user's messages
           if (countError) {
             console.error("Error counting all public messages:", countError);
           } else {
@@ -176,7 +178,8 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onS
             .from('private_messages')
             .select('id', { count: 'exact' })
             .eq('private_chat_id', convo.id)
-            .gt('created_at', lastReadAt);
+            .gt('created_at', lastReadAt)
+            .neq('sender_id', currentUserId); // Exclude current user's messages
 
           if (countError) {
             console.error("Error counting unread private messages:", countError);
@@ -188,7 +191,8 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onS
           const { count, error: countError } = await supabase
             .from('private_messages')
             .select('id', { count: 'exact' })
-            .eq('private_chat_id', convo.id);
+            .eq('private_chat_id', convo.id)
+            .neq('sender_id', currentUserId); // Exclude current user's messages
           if (countError) {
             console.error("Error counting all private messages:", countError);
           } else {

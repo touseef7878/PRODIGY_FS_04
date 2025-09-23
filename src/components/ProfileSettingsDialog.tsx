@@ -17,6 +17,8 @@ import { Settings, User } from 'lucide-react';
 import { useSession } from '@/components/SessionContextProvider';
 import { showError, showSuccess } from '@/utils/toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Separator } from '@/components/ui/separator';
+import ClearChatHistoryDialog from './ClearChatHistoryDialog'; // Import the new component
 
 interface Profile {
   id: string;
@@ -175,6 +177,16 @@ const ProfileSettingsDialog: React.FC<ProfileSettingsDialogProps> = ({ onProfile
                 className="col-span-3"
                 placeholder="Optional: URL to your avatar image"
               />
+            </div>
+
+            <Separator className="my-4" />
+
+            <div className="space-y-2">
+              <h3 className="text-lg font-semibold">Danger Zone</h3>
+              <p className="text-sm text-muted-foreground">
+                Permanently delete your chat history and related data.
+              </p>
+              <ClearChatHistoryDialog onHistoryCleared={onProfileUpdated} />
             </div>
           </div>
         )}
