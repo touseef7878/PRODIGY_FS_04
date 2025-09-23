@@ -50,11 +50,11 @@ const ChatPage: React.FC = () => {
     if (chatType === 'public') {
       query = supabase
         .from('user_chat_read_status')
-        .upsert({ ...upsertData, chat_room_id: chatId, private_chat_id: null }, { onConflict: 'user_id,chat_room_id' }); // Changed onConflict
+        .upsert({ ...upsertData, chat_room_id: chatId, private_chat_id: null }, { onConflict: 'user_chat_room_read_status_unique' }); // Changed onConflict to index name
     } else { // private
       query = supabase
         .from('user_chat_read_status')
-        .upsert({ ...upsertData, private_chat_id: chatId, chat_room_id: null }, { onConflict: 'user_id,private_chat_id' }); // Changed onConflict
+        .upsert({ ...upsertData, private_chat_id: chatId, chat_room_id: null }, { onConflict: 'user_private_chat_read_status_unique' }); // Changed onConflict to index name
     }
 
     const { error } = await query;
