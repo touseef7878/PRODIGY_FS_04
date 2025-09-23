@@ -118,7 +118,8 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onS
         const user2Profile = convo.user2?.[0];
 
         if (!user1Profile || !user2Profile) {
-          console.warn("Missing profile data for private chat:", convo.id, "User1:", convo.user1, "User2:", convo.user2); // Enhanced log
+          // Log the actual arrays to see if they are empty or null
+          console.warn("Missing profile data for private chat:", convo.id, "User1 array:", convo.user1, "User2 array:", convo.user2);
           return null;
         }
 

@@ -78,17 +78,19 @@ const ChatPage: React.FC = () => {
       setMessages([]);
     } else {
       setMessages(data as Message[]);
+      console.log(`[ChatPage] Fetched initial messages for ${chatType} chat ${chatId}:`, data);
     }
     setLoadingMessages(false);
   };
 
   useEffect(() => {
-    console.log(`[ChatPage] Setting up subscription for chat: ${selectedChatId}, type: ${selectedChatType}`);
+    console.log(`[ChatPage] Effect running. Selected Chat ID: ${selectedChatId}, Type: ${selectedChatType}`);
     if (selectedChatId && selectedChatType) {
       fetchMessages(selectedChatId, selectedChatType);
 
       let channel;
       if (selectedChatType === 'public') {
+        console.log(`[ChatPage] Subscribing to public chat_room_${selectedChatId}`);
         channel = supabase
           .channel(`chat_room_${selectedChatId}`)
           .on('postgres_changes', {
@@ -97,7 +99,7 @@ const ChatPage: React.FC = () => {
             table: 'messages',
             filter: `chat_room_id=eq.${selectedChatId}`
           }, async (payload) => {
-            console.log("[ChatPage] Real-time INSERT event received for public chat:", payload.new);
+            console.log("[ChatPage] Real-time INSERT event received for public chat:", payload.new); // This log should appear
             const newMessageId = (payload.new as Message).id;
             const senderId = (payload.new as Message).sender_id;
             const content = (payload.new as Message).content;
@@ -109,6 +111,8 @@ const ChatPage: React.FC = () => {
               .eq('id', senderId)
               .limit(1);
 
+            console.log("[ChatPage] Profile fetch for real-time message - Data:", profileDataArray, "Error:", profileError);
+
             const profileData = profileDataArray && profileDataArray.length > 0 ? profileDataArray[0] : null;
 
             setMessages((prevMessages) => {
@@ -119,7 +123,7 @@ const ChatPage: React.FC = () => {
                     created_at: createdAt,
                     profiles: profileData ? [profileData] : [], // Ensure profiles is always an array
                 };
-                console.log("[ChatPage] Adding new message to state (public):", newMsg);
+                console.log("[ChatPage] New message object created for state update:", newMsg);
                 const updatedMessages = [...prevMessages, newMsg];
                 console.log("[ChatPage] Messages state after adding (public):", updatedMessages);
                 return updatedMessages;
@@ -127,6 +131,7 @@ const ChatPage: React.FC = () => {
           })
           .subscribe();
       } else { // selectedChatType === 'private'
+        console.log(`[ChatPage] Subscribing to private_chat_${selectedChatId}`);
         channel = supabase
           .channel(`private_chat_${selectedChatId}`)
           .on('postgres_changes', {
@@ -135,7 +140,7 @@ const ChatPage: React.FC = () => {
             table: 'private_messages',
             filter: `private_chat_id=eq.${selectedChatId}`
           }, async (payload) => {
-            console.log("[ChatPage] Real-time INSERT event received for private chat:", payload.new);
+            console.log("[ChatPage] Real-time INSERT event received for private chat:", payload.new); // This log should appear
             const newMessageId = (payload.new as Message).id;
             const senderId = (payload.new as Message).sender_id;
             const content = (payload.new as Message).content;
@@ -147,6 +152,8 @@ const ChatPage: React.FC = () => {
               .eq('id', senderId)
               .limit(1);
 
+            console.log("[ChatPage] Profile fetch for real-time message - Data:", profileDataArray, "Error:", profileError);
+
             const profileData = profileDataArray && profileDataArray.length > 0 ? profileDataArray[0] : null;
 
             setMessages((prevMessages) => {
@@ -157,7 +164,7 @@ const ChatPage: React.FC = () => {
                     created_at: createdAt,
                     profiles: profileData ? [profileData] : [], // Ensure profiles is always an array
                 };
-                console.log("[ChatPage] Adding new message to state (private):", newMsg);
+                console.log("[ChatPage] New message object created for state update:", newMsg);
                 const updatedMessages = [...prevMessages, newMsg];
                 console.log("[ChatPage] Messages state after adding (private):", updatedMessages);
                 return updatedMessages;
@@ -182,6 +189,7 @@ const ChatPage: React.FC = () => {
     setSelectedChatName(chatName);
     setSelectedChatType(chatType);
     setMessages([]); // Clear messages when switching chats
+    console.log(`[ChatPage] Chat selected: ID=${chatId}, Name=${chatName}, Type=${chatType}. Messages cleared.`);
   };
 
   const handleSendMessage = async (content: string) => {
@@ -189,6 +197,8 @@ const ChatPage: React.FC = () => {
       showError("Please select a chat and ensure you are logged in to send messages.");
       return;
     }
+
+    console.log(`[ChatPage] Sending message: "${content}" to ${selectedChatType} chat ${selectedChatId}`);
 
     let error;
     if (selectedChatType === 'public') {
@@ -208,10 +218,12 @@ const ChatPage: React.FC = () => {
     if (error) {
       showError("Failed to send message: " + error.message);
       console.error("Error sending message:", error);
+    } else {
+      console.log("[ChatPage] Message sent successfully (DB insert acknowledged).");
     }
   };
 
-  console.log("[ChatPage] Rendered. Current messages state:", messages); // NEW LOG HERE
+  console.log("[ChatPage] Rendered. Current messages state:", messages);
 
   return (
     <ChatLayout
