@@ -39,29 +39,63 @@ const ChatPage: React.FC = () => {
     if (!currentUserId) return;
 
     const now = new Date().toISOString();
-    const upsertData = {
-      user_id: currentUserId,
-      last_read_at: now,
-      // 'created_at' is intentionally omitted here. It should be set by the database's default
-      // on initial insert and not updated on subsequent upserts.
-    };
+    let existingReadStatusQuery;
 
-    let query;
     if (chatType === 'public') {
-      query = supabase
+      existingReadStatusQuery = supabase
         .from('user_chat_read_status')
-        .upsert({ ...upsertData, chat_room_id: chatId, private_chat_id: null }, { onConflict: 'user_id,chat_room_id' }); // Corrected onConflict to use column names
+        .select('id')
+        .eq('user_id', currentUserId)
+        .eq('chat_room_id', chatId)
+        .single();
     } else { // private
-      query = supabase
+      existingReadStatusQuery = supabase
         .from('user_chat_read_status')
-        .upsert({ ...upsertData, private_chat_id: chatId, chat_room_id: null }, { onConflict: 'user_id,private_chat_id' }); // Corrected onConflict to use column names
+        .select('id')
+        .eq('user_id', currentUserId)
+        .eq('private_chat_id', chatId)
+        .single();
     }
 
-    const { error } = await query;
+    const { data: existingReadStatus, error: selectError } = await existingReadStatusQuery;
+
+    let error;
+    if (selectError && selectError.code !== 'PGRST116') { // PGRST116 means "no rows found"
+      console.error("Error checking existing read status:", selectError);
+      showError("Failed to check read status: " + selectError.message);
+      return;
+    }
+
+    if (existingReadStatus) {
+      // If a record exists, update it
+      const updateData = { last_read_at: now };
+      let updateQuery;
+      if (chatType === 'public') {
+        updateQuery = supabase
+          .from('user_chat_read_status')
+          .update(updateData)
+          .eq('id', existingReadStatus.id);
+      } else {
+        updateQuery = supabase
+          .from('user_chat_read_status')
+          .update(updateData)
+          .eq('id', existingReadStatus.id);
+      }
+      ({ error } = await updateQuery);
+    } else {
+      // If no record exists, insert a new one
+      const insertData = {
+        user_id: currentUserId,
+        last_read_at: now,
+        chat_room_id: chatType === 'public' ? chatId : null,
+        private_chat_id: chatType === 'private' ? chatId : null,
+      };
+      ({ error } = await supabase.from('user_chat_read_status').insert(insertData));
+    }
 
     if (error) {
       console.error("Error marking chat as read:", error);
-      showError("Failed to mark chat as read: " + error.message); // Show error toast
+      showError("Failed to mark chat as read: " + error.message);
     } else {
       console.log(`[ChatPage] Chat ${chatId} marked as read for user ${currentUserId}`);
       setSidebarRefreshKey(prev => prev + 1); // Trigger sidebar refresh
@@ -180,7 +214,7 @@ const ChatPage: React.FC = () => {
               .from('private_chats')
               .select(`
                 user1:user1_id(id, username, first_name),
-                user2:user2_id(id, username, first_name)
+                user2:user2_2id(id, username, first_name)
               `)
               .eq('id', incomingChatId)
               .single();
