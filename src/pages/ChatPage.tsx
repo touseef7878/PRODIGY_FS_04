@@ -39,27 +39,29 @@ const ChatPage: React.FC = () => {
     if (!currentUserId) return;
 
     const now = new Date().toISOString();
-    const updateData = {
+    const upsertData = {
       user_id: currentUserId,
       last_read_at: now,
-      created_at: now, // Also set created_at for new inserts
+      // 'created_at' is intentionally omitted here. It should be set by the database's default
+      // on initial insert and not updated on subsequent upserts.
     };
 
     let query;
     if (chatType === 'public') {
       query = supabase
         .from('user_chat_read_status')
-        .upsert({ ...updateData, chat_room_id: chatId }, { onConflict: 'user_id,chat_room_id' });
+        .upsert({ ...upsertData, chat_room_id: chatId }, { onConflict: 'user_id,chat_room_id' });
     } else { // private
       query = supabase
         .from('user_chat_read_status')
-        .upsert({ ...updateData, private_chat_id: chatId }, { onConflict: 'user_id,private_chat_id' });
+        .upsert({ ...upsertData, private_chat_id: chatId }, { onConflict: 'user_id,private_chat_id' });
     }
 
     const { error } = await query;
 
     if (error) {
       console.error("Error marking chat as read:", error);
+      showError("Failed to mark chat as read: " + error.message); // Show error toast
     } else {
       console.log(`[ChatPage] Chat ${chatId} marked as read for user ${currentUserId}`);
       setSidebarRefreshKey(prev => prev + 1); // Trigger sidebar refresh
