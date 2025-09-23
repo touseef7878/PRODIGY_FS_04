@@ -51,10 +51,10 @@ interface SidebarProps {
   selectedChatId?: string;
   selectedChatType?: 'public' | 'private';
   onSelectChat: (chatId: string, chatName: string, chatType: 'public' | 'private') => void;
-  onChatsUpdated: () => void; // Callback to notify parent when chats are updated
+  // Removed onChatsUpdated as it's no longer used directly in Sidebar
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onSelectChat, onChatsUpdated }) => {
+const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onSelectChat }) => {
   const { supabase, session } = useSession();
   const [chatRooms, setChatRooms] = useState<ChatRoom[]>([]);
   const [privateChats, setPrivateChats] = useState<PrivateChat[]>([]);
@@ -213,7 +213,6 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onS
     }
 
     setLoading(false);
-    onChatsUpdated(); // Notify parent that chats have been updated
   };
 
   useEffect(() => {
@@ -223,28 +222,28 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onS
       // Realtime subscriptions for new chat rooms, private chats, and messages
       const publicRoomChannel = supabase
         .channel('public:chat_rooms')
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_rooms' }, _payload => { // Renamed to _payload
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_rooms' }, _payload => {
           fetchChats();
         })
         .subscribe();
 
       const privateChatChannel = supabase
         .channel('public:private_chats')
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'private_chats' }, _payload => { // Renamed to _payload
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'private_chats' }, _payload => {
           fetchChats();
         })
         .subscribe();
 
       const publicMessageChannel = supabase
         .channel('public:messages')
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, _payload => { // Renamed to _payload
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, _payload => {
           fetchChats();
         })
         .subscribe();
 
       const privateMessageChannel = supabase
         .channel('public:private_messages')
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'private_messages' }, _payload => { // Renamed to _payload
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'private_messages' }, _payload => {
           fetchChats();
         })
         .subscribe();
@@ -252,7 +251,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onS
       // Also listen for changes in user_chat_read_status to update unread counts
       const readStatusChannel = supabase
         .channel('public:user_chat_read_status')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'user_chat_read_status', filter: `user_id=eq.${currentUserId}` }, _payload => { // Renamed to _payload
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'user_chat_read_status', filter: `user_id=eq.${currentUserId}` }, _payload => {
           fetchChats();
         })
         .subscribe();

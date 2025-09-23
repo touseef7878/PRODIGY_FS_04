@@ -20,9 +20,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import ChatDataManagementSection from './ChatDataManagementSection';
-import DeleteAccountDialog from './DeleteAccountDialog';
-
-// Removed unused 'Profile' interface
 
 interface ProfileSettingsDialogProps {
   onProfileUpdated: () => void;
@@ -113,7 +110,7 @@ const ProfileSettingsDialog: React.FC<ProfileSettingsDialogProps> = ({ onProfile
         <DialogHeader>
           <DialogTitle>Profile Settings</DialogTitle>
           <DialogDescription>
-            Manage your profile, chat data, and account.
+            Manage your profile and chat data.
           </DialogDescription>
         </DialogHeader>
         {loading ? (
@@ -190,17 +187,6 @@ const ProfileSettingsDialog: React.FC<ProfileSettingsDialogProps> = ({ onProfile
 
               {/* Chat Data Management Section */}
               <ChatDataManagementSection onChatDataCleared={onProfileUpdated} />
-
-              <Separator className="my-4" />
-
-              {/* Account Management Section */}
-              <div className="space-y-2">
-                <h3 className="text-lg font-semibold text-destructive">Account Management</h3>
-                <p className="text-sm text-muted-foreground">
-                  Permanently delete your account and all associated data. This action is irreversible.
-                </p>
-                <DeleteAccountDialog onAccountDeleted={onProfileUpdated} />
-              </div>
             </div>
           </ScrollArea>
         )}

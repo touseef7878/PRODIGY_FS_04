@@ -268,17 +268,8 @@ const ChatPage: React.FC = () => {
     }
   };
 
-  // Callback for when chat data is cleared (from ProfileSettingsDialog -> ChatDataManagementSection)
-  const _handleChatDataCleared = useCallback(() => {
-    // Force sidebar to re-fetch all chats
-    setSidebarRefreshKey(prev => prev + 1);
-    // Reset selected chat if it might have been deleted
-    setSelectedChatId(undefined);
-    setSelectedChatName(undefined);
-    setSelectedChatType(undefined);
-    setMessages([]);
-    showInfo("Chat data refreshed after deletion.");
-  }, []);
+  // The _handleChatDataCleared function is no longer needed as Sidebar manages its own refreshes
+  // and ChatPage uses sidebarRefreshKey for full re-mounts if necessary.
 
   console.log("[ChatPage] Rendered. Current messages state:", messages);
 
@@ -290,7 +281,7 @@ const ChatPage: React.FC = () => {
           selectedChatId={selectedChatId}
           selectedChatType={selectedChatType}
           onSelectChat={handleSelectChat}
-          onChatsUpdated={_handleChatDataCleared} // Pass the callback here
+          // Removed onChatsUpdated prop as it's no longer expected by Sidebar
         />
       }
     >
