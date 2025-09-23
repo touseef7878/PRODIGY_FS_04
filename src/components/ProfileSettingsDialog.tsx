@@ -18,7 +18,8 @@ import { useSession } from '@/components/SessionContextProvider';
 import { showError, showSuccess } from '@/utils/toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
-import ClearChatHistoryDialog from './ClearChatHistoryDialog'; // Import the new component
+import ChatDataManagementSection from './ChatDataManagementSection'; // Import the refactored component
+import DeleteAccountDialog from './DeleteAccountDialog'; // Import the new component
 
 interface Profile {
   id: string;
@@ -117,85 +118,95 @@ const ProfileSettingsDialog: React.FC<ProfileSettingsDialogProps> = ({ onProfile
         <DialogHeader>
           <DialogTitle>Profile Settings</DialogTitle>
           <DialogDescription>
-            Update your public profile information.
+            Manage your profile, chat data, and account.
           </DialogDescription>
         </DialogHeader>
         {loading ? (
           <div className="py-8 text-center text-muted-foreground">Loading profile...</div>
         ) : (
           <div className="grid gap-4 py-4">
-            <div className="flex justify-center mb-4">
-              <Avatar className="h-24 w-24">
-                <AvatarImage src={avatarUrl || defaultAvatar} alt={username} />
-                <AvatarFallback><User className="h-12 w-12" /></AvatarFallback>
-              </Avatar>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="firstName" className="text-right">
-                First Name
-              </Label>
-              <Input
-                id="firstName"
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                className="col-span-3"
-                placeholder="e.g., John"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="lastName" className="text-right">
-                Last Name
-              </Label>
-              <Input
-                id="lastName"
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-                className="col-span-3"
-                placeholder="e.g., Doe"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="username" className="text-right">
-                Username
-              </Label>
-              <Input
-                id="username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                className="col-span-3"
-                placeholder="e.g., johndoe"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="avatarUrl" className="text-right">
-                Avatar URL
-              </Label>
-              <Input
-                id="avatarUrl"
-                value={avatarUrl}
-                onChange={(e) => setAvatarUrl(e.target.value)}
-                className="col-span-3"
-                placeholder="Optional: URL to your avatar image"
-              />
+            {/* Profile Update Section */}
+            <div className="space-y-2">
+              <h3 className="text-lg font-semibold">Update Profile</h3>
+              <div className="flex justify-center mb-4">
+                <Avatar className="h-24 w-24">
+                  <AvatarImage src={avatarUrl || defaultAvatar} alt={username} />
+                  <AvatarFallback><User className="h-12 w-12" /></AvatarFallback>
+                </Avatar>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="firstName" className="text-right">
+                  First Name
+                </Label>
+                <Input
+                  id="firstName"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  className="col-span-3"
+                  placeholder="e.g., John"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="lastName" className="text-right">
+                  Last Name
+                </Label>
+                <Input
+                  id="lastName"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  className="col-span-3"
+                  placeholder="e.g., Doe"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="username" className="text-right">
+                  Username
+                </Label>
+                <Input
+                  id="username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="col-span-3"
+                  placeholder="e.g., johndoe"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="avatarUrl" className="text-right">
+                  Avatar URL
+                </Label>
+                <Input
+                  id="avatarUrl"
+                  value={avatarUrl}
+                  onChange={(e) => setAvatarUrl(e.target.value)}
+                  className="col-span-3"
+                  placeholder="Optional: URL to your avatar image"
+                />
+              </div>
+              <DialogFooter className="mt-4">
+                <Button variant="outline" onClick={() => setOpen(false)} disabled={isSaving}>Cancel</Button>
+                <Button type="submit" onClick={handleSave} disabled={isSaving || loading}>
+                  {isSaving ? 'Saving...' : 'Save changes'}
+                </Button>
+              </DialogFooter>
             </div>
 
             <Separator className="my-4" />
 
+            {/* Chat Data Management Section */}
+            <ChatDataManagementSection onChatDataCleared={onProfileUpdated} />
+
+            <Separator className="my-4" />
+
+            {/* Account Management Section */}
             <div className="space-y-2">
-              <h3 className="text-lg font-semibold">Danger Zone</h3>
+              <h3 className="text-lg font-semibold text-destructive">Account Management</h3>
               <p className="text-sm text-muted-foreground">
-                Permanently delete your chat history and related data.
+                Permanently delete your account and all associated data. This action is irreversible.
               </p>
-              <ClearChatHistoryDialog onHistoryCleared={onProfileUpdated} />
+              <DeleteAccountDialog onAccountDeleted={onProfileUpdated} />
             </div>
           </div>
         )}
-        <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)} disabled={isSaving}>Cancel</Button>
-          <Button type="submit" onClick={handleSave} disabled={isSaving || loading}>
-            {isSaving ? 'Saving...' : 'Save changes'}
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

@@ -267,6 +267,18 @@ const ChatPage: React.FC = () => {
     }
   };
 
+  // Callback for when chat data is cleared (from ProfileSettingsDialog -> ChatDataManagementSection)
+  const handleChatDataCleared = useCallback(() => {
+    // Force sidebar to re-fetch all chats
+    setSidebarRefreshKey(prev => prev + 1);
+    // Reset selected chat if it might have been deleted
+    setSelectedChatId(undefined);
+    setSelectedChatName(undefined);
+    setSelectedChatType(undefined);
+    setMessages([]);
+    showInfo("Chat data refreshed after deletion.");
+  }, []);
+
   console.log("[ChatPage] Rendered. Current messages state:", messages);
 
   return (
