@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import ChatLayout from '@/components/layout/ChatLayout';
 import Sidebar from '@/components/Sidebar';
 import { MadeWithDyad } from '@/components/made-with-dyad';
 import MessageInput from '@/components/MessageInput';
 import MessageList from '@/components/MessageList';
-import { showError } from '@/utils/toast';
+import { showError, showInfo } from '@/utils/toast'; // Import showInfo
 import { useSession } from '@/components/SessionContextProvider';
 
 interface Message {
@@ -14,6 +14,8 @@ interface Message {
   sender_id: string;
   content: string;
   created_at: string;
+  chat_room_id?: string; // Added for public messages
+  private_chat_id?: string; // Added for private messages
   profiles: Array<{
     username: string;
     avatar_url?: string;
@@ -32,6 +34,14 @@ const ChatPage: React.FC = () => {
 
   const currentUserId = session?.user?.id;
 
+  const handleSelectChat = useCallback((chatId: string, chatName: string, chatType: 'public' | 'private') => {
+    setSelectedChatId(chatId);
+    setSelectedChatName(chatName);
+    setSelectedChatType(chatType);
+    setMessages([]); // Clear messages when switching chats
+    console.log(`[ChatPage] Chat selected: ID=${chatId}, Name=${chatName}, Type=${chatType}. Messages cleared.`);
+  }, []); // State setters are stable, so no dependencies needed here
+
   const fetchMessages = async (chatId: string, chatType: 'public' | 'private') => {
     setLoadingMessages(true);
     let data, error;
@@ -44,6 +54,7 @@ const ChatPage: React.FC = () => {
           created_at,
           sender_id,
           content,
+          chat_room_id,
           profiles (
             username,
             avatar_url,
@@ -61,6 +72,7 @@ const ChatPage: React.FC = () => {
           created_at,
           sender_id,
           content,
+          private_chat_id,
           profiles (
             username,
             avatar_url,
@@ -88,6 +100,67 @@ const ChatPage: React.FC = () => {
     if (selectedChatId && selectedChatType) {
       fetchMessages(selectedChatId, selectedChatType);
 
+      const handleNewMessage = async (payload: any, type: 'public' | 'private') => {
+        const incomingMessage = payload.new as Message;
+        const incomingChatId = type === 'public' ? incomingMessage.chat_room_id : incomingMessage.private_chat_id;
+
+        // Fetch sender profile
+        const { data: profileDataArray, error: profileError } = await supabase
+          .from('profiles')
+          .select('username, first_name, last_name')
+          .eq('id', incomingMessage.sender_id)
+          .limit(1);
+
+        const senderProfile = profileDataArray && profileDataArray.length > 0 ? profileDataArray[0] : null;
+        const senderName = senderProfile?.first_name || senderProfile?.username || 'Unknown User';
+
+        // If the message is for the currently selected chat, update messages state
+        if (selectedChatId === incomingChatId && selectedChatType === type) {
+          setMessages((prevMessages) => {
+            const newMsg: Message = {
+              ...incomingMessage,
+              profiles: senderProfile ? [senderProfile] : [],
+            };
+            console.log("[ChatPage] New message object created for state update (current chat):", newMsg);
+            const updatedMessages = [...prevMessages, newMsg];
+            console.log("[ChatPage] Messages state after adding (current chat):", updatedMessages);
+            return updatedMessages;
+          });
+        } else {
+          // Message is for a different chat, show a notification
+          let chatNameForNotification = 'a chat';
+          if (type === 'public') {
+            const { data: chatRoom, error: roomError } = await supabase
+              .from('chat_rooms')
+              .select('name')
+              .eq('id', incomingChatId)
+              .single();
+            if (chatRoom) {
+              chatNameForNotification = chatRoom.name;
+            }
+          } else { // private chat
+            const { data: privateChat, error: privateChatError } = await supabase
+              .from('private_chats')
+              .select(`
+                user1:user1_id(id, username, first_name),
+                user2:user2_id(id, username, first_name)
+              `)
+              .eq('id', incomingChatId)
+              .single();
+
+            if (privateChat) {
+                const otherUser = privateChat.user1?.[0]?.id === currentUserId ? privateChat.user2?.[0] : privateChat.user1?.[0];
+                chatNameForNotification = otherUser?.first_name || otherUser?.username || 'a private chat';
+            }
+          }
+          showInfo(
+            `New message from ${senderName} in ${chatNameForNotification}`,
+            incomingMessage.content.substring(0, 100) + (incomingMessage.content.length > 100 ? '...' : ''),
+            () => handleSelectChat(incomingChatId, chatNameForNotification, type) // Action to switch to the chat
+          );
+        }
+      };
+
       let channel;
       if (selectedChatType === 'public') {
         console.log(`[ChatPage] Subscribing to public chat_room_${selectedChatId}`);
@@ -98,37 +171,7 @@ const ChatPage: React.FC = () => {
             schema: 'public',
             table: 'messages',
             filter: `chat_room_id=eq.${selectedChatId}`
-          }, async (payload) => {
-            console.log("[ChatPage] Real-time INSERT event received for public chat:", payload.new); // This log should appear
-            const newMessageId = (payload.new as Message).id;
-            const senderId = (payload.new as Message).sender_id;
-            const content = (payload.new as Message).content;
-            const createdAt = (payload.new as Message).created_at;
-
-            const { data: profileDataArray, error: profileError } = await supabase
-              .from('profiles')
-              .select('username, avatar_url, first_name, last_name')
-              .eq('id', senderId)
-              .limit(1);
-
-            console.log("[ChatPage] Profile fetch for real-time message - Data:", profileDataArray, "Error:", profileError);
-
-            const profileData = profileDataArray && profileDataArray.length > 0 ? profileDataArray[0] : null;
-
-            setMessages((prevMessages) => {
-                const newMsg: Message = {
-                    id: newMessageId,
-                    sender_id: senderId,
-                    content: content,
-                    created_at: createdAt,
-                    profiles: profileData ? [profileData] : [], // Ensure profiles is always an array
-                };
-                console.log("[ChatPage] New message object created for state update:", newMsg);
-                const updatedMessages = [...prevMessages, newMsg];
-                console.log("[ChatPage] Messages state after adding (public):", updatedMessages);
-                return updatedMessages;
-            });
-          })
+          }, (payload) => handleNewMessage(payload, 'public'))
           .subscribe();
       } else { // selectedChatType === 'private'
         console.log(`[ChatPage] Subscribing to private_chat_${selectedChatId}`);
@@ -139,37 +182,7 @@ const ChatPage: React.FC = () => {
             schema: 'public',
             table: 'private_messages',
             filter: `private_chat_id=eq.${selectedChatId}`
-          }, async (payload) => {
-            console.log("[ChatPage] Real-time INSERT event received for private chat:", payload.new); // This log should appear
-            const newMessageId = (payload.new as Message).id;
-            const senderId = (payload.new as Message).sender_id;
-            const content = (payload.new as Message).content;
-            const createdAt = (payload.new as Message).created_at;
-
-            const { data: profileDataArray, error: profileError } = await supabase
-              .from('profiles')
-              .select('username, avatar_url, first_name, last_name')
-              .eq('id', senderId)
-              .limit(1);
-
-            console.log("[ChatPage] Profile fetch for real-time message - Data:", profileDataArray, "Error:", profileError);
-
-            const profileData = profileDataArray && profileDataArray.length > 0 ? profileDataArray[0] : null;
-
-            setMessages((prevMessages) => {
-                const newMsg: Message = {
-                    id: newMessageId,
-                    sender_id: senderId,
-                    content: content,
-                    created_at: createdAt,
-                    profiles: profileData ? [profileData] : [], // Ensure profiles is always an array
-                };
-                console.log("[ChatPage] New message object created for state update:", newMsg);
-                const updatedMessages = [...prevMessages, newMsg];
-                console.log("[ChatPage] Messages state after adding (private):", updatedMessages);
-                return updatedMessages;
-            });
-          })
+          }, (payload) => handleNewMessage(payload, 'private'))
           .subscribe();
       }
 
@@ -182,15 +195,7 @@ const ChatPage: React.FC = () => {
     } else {
       console.log("[ChatPage] No chat selected, skipping subscription setup.");
     }
-  }, [selectedChatId, selectedChatType, supabase]);
-
-  const handleSelectChat = (chatId: string, chatName: string, chatType: 'public' | 'private') => {
-    setSelectedChatId(chatId);
-    setSelectedChatName(chatName);
-    setSelectedChatType(chatType);
-    setMessages([]); // Clear messages when switching chats
-    console.log(`[ChatPage] Chat selected: ID=${chatId}, Name=${chatName}, Type=${chatType}. Messages cleared.`);
-  };
+  }, [selectedChatId, selectedChatType, supabase, currentUserId, handleSelectChat]);
 
   const handleSendMessage = async (content: string) => {
     if (!selectedChatId || !currentUserId || !selectedChatType) {
