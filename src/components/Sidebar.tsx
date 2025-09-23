@@ -8,8 +8,9 @@ import { Separator } from "@/components/ui/separator";
 import { useSession } from '@/components/SessionContextProvider';
 import { showError } from '@/utils/toast';
 import CreateChatRoomDialog from './CreateChatRoomDialog';
-import StartPrivateChatDialog from './StartPrivateChatDialog'; // Import the new component
-import { Users, MessageSquare } from 'lucide-react'; // Import icons
+import StartPrivateChatDialog from './StartPrivateChatDialog';
+import ProfileSettingsDialog from './ProfileSettingsDialog'; // Import the new component
+import { Users, MessageSquare } from 'lucide-react';
 
 interface ChatRoom {
   id: string;
@@ -34,22 +35,22 @@ interface RawPrivateChatData {
   user1_id: string;
   user2_id: string;
   private_messages: Array<{ content: string; created_at: string }> | null;
-  user1: SupabaseProfile[] | null; // Changed to array of profiles
-  user2: SupabaseProfile[] | null; // Changed to array of profiles
+  user1: SupabaseProfile[] | null;
+  user2: SupabaseProfile[] | null;
 }
 
 interface PrivateChat {
   id: string;
   user1_id: string;
   user2_id: string;
-  other_user_profile: SupabaseProfile; // This should be a single profile object
+  other_user_profile: SupabaseProfile;
   last_message_content?: string;
   unread_count?: number;
 }
 
 interface SidebarProps {
   selectedChatId?: string;
-  selectedChatType?: 'public' | 'private'; // Added chat type
+  selectedChatType?: 'public' | 'private';
   onSelectChat: (chatId: string, chatName: string, chatType: 'public' | 'private') => void;
 }
 
@@ -109,18 +110,15 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onS
       showError("Failed to load private chats: " + privateError.message);
       console.error("Error fetching private chats:", privateError);
     } else {
-      // Explicitly cast the data to the expected type
       const typedPrivateConvos = privateConvos as RawPrivateChatData[];
 
       const convosWithOtherUser = typedPrivateConvos.map(convo => {
-        // Safely access the first element of the user arrays
         const user1Profile = convo.user1?.[0];
         const user2Profile = convo.user2?.[0];
 
-        // Ensure both profiles exist before proceeding
         if (!user1Profile || !user2Profile) {
           console.warn("Missing profile data for private chat:", convo.id);
-          return null; // Filter out this chat if profiles are missing
+          return null;
         }
 
         const otherUser = user1Profile.id === currentUserId ? user2Profile : user1Profile;
@@ -134,7 +132,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onS
           other_user_profile: otherUser,
           last_message_content: lastMessage,
         };
-      }).filter(Boolean) as PrivateChat[]; // Filter out any nulls and cast to PrivateChat[]
+      }).filter(Boolean) as PrivateChat[];
       setPrivateChats(convosWithOtherUser);
     }
 
@@ -145,38 +143,33 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onS
     if (session) {
       fetchChats();
 
-      // Set up real-time subscription for new public chat rooms
       const publicChannel = supabase
         .channel('public:chat_rooms')
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_rooms' }, payload => {
-          fetchChats(); // Refetch all chats on new public room
+          fetchChats();
         })
         .subscribe();
 
-      // Set up real-time subscription for new private chats
       const privateChannel = supabase
         .channel('public:private_chats')
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'private_chats' }, payload => {
-          fetchChats(); // Refetch all chats on new private chat
+          fetchChats();
         })
         .subscribe();
 
-      // Set up real-time subscription for new messages in public chats to update last message preview
       const publicMessageChannel = supabase
         .channel('public:messages')
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
-          fetchChats(); // Refetch all chats to update last message
+          fetchChats();
         })
         .subscribe();
 
-      // Set up real-time subscription for new messages in private chats to update last message preview
       const privateMessageChannel = supabase
         .channel('public:private_messages')
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'private_messages' }, payload => {
-          fetchChats(); // Refetch all chats to update last message
+          fetchChats();
         })
         .subscribe();
-
 
       return () => {
         supabase.removeChannel(publicChannel);
@@ -203,8 +196,9 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onS
           <CreateChatRoomDialog onChatRoomCreated={fetchChats} />
           <StartPrivateChatDialog onChatSelected={(id, name, type) => {
             onSelectChat(id, name, type);
-            fetchChats(); // Refresh sidebar after creating/selecting private chat
+            fetchChats();
           }} />
+          <ProfileSettingsDialog onProfileUpdated={fetchChats} /> {/* Added ProfileSettingsDialog */}
         </div>
       </div>
       <Separator />
