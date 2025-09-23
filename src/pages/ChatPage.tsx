@@ -14,7 +14,7 @@ interface Message {
   sender_id: string;
   content: string;
   created_at: string;
-  profiles: Array<{ // Changed to Array
+  profiles: Array<{
     username: string;
     avatar_url?: string;
     first_name?: string;
@@ -73,28 +73,43 @@ const ChatPage: React.FC = () => {
           table: 'messages',
           filter: `chat_room_id=eq.${selectedChatId}`
         }, async (payload) => {
-          // Fetch the new message with profile data
-          const { data, error } = await supabase
-            .from('messages')
-            .select(`
-              id,
-              created_at,
-              sender_id,
-              content,
-              profiles (
-                username,
-                avatar_url,
-                first_name,
-                last_name
-              )
-            `)
-            .eq('id', (payload.new as Message).id)
+          const newMessageId = (payload.new as Message).id;
+          const senderId = (payload.new as Message).sender_id;
+          const content = (payload.new as Message).content;
+          const createdAt = (payload.new as Message).created_at;
+
+          // Fetch sender profile separately to ensure it's available for real-time updates
+          const { data: profileData, error: profileError } = await supabase
+            .from('profiles')
+            .select('username, avatar_url, first_name, last_name')
+            .eq('id', senderId)
             .single();
 
-          if (error) {
-            console.error("Error fetching new message for real-time update:", error);
-          } else if (data) {
-            setMessages((prevMessages) => [...prevMessages, data as Message]);
+          if (profileError) {
+            console.error("Error fetching sender profile for real-time update:", profileError);
+            // Add message without profile if profile fetch fails
+            setMessages((prevMessages) => [
+              ...prevMessages,
+              {
+                id: newMessageId,
+                sender_id: senderId,
+                content: content,
+                created_at: createdAt,
+                profiles: null,
+              } as Message,
+            ]);
+          } else {
+            // Construct the full message object with the fetched profile
+            setMessages((prevMessages) => [
+              ...prevMessages,
+              {
+                id: newMessageId,
+                sender_id: senderId,
+                content: content,
+                created_at: createdAt,
+                profiles: profileData ? [profileData] : null, // Ensure it's an array or null
+              } as Message,
+            ]);
           }
         })
         .subscribe();
