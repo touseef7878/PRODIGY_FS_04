@@ -97,7 +97,7 @@ const ChatPage: React.FC = () => {
             table: 'messages',
             filter: `chat_room_id=eq.${selectedChatId}`
           }, async (payload) => {
-            console.log("[ChatPage] Public chat real-time message received:", payload.new);
+            console.log("[ChatPage] Real-time INSERT event received for public chat:", payload.new); // New log
             const newMessageId = (payload.new as Message).id;
             const senderId = (payload.new as Message).sender_id;
             const content = (payload.new as Message).content;
@@ -138,7 +138,7 @@ const ChatPage: React.FC = () => {
             table: 'private_messages',
             filter: `private_chat_id=eq.${selectedChatId}`
           }, async (payload) => {
-            console.log("[ChatPage] Private chat real-time message received:", payload.new);
+            console.log("[ChatPage] Real-time INSERT event received for private chat:", payload.new); // New log
             const newMessageId = (payload.new as Message).id;
             const senderId = (payload.new as Message).sender_id;
             const content = (payload.new as Message).content;

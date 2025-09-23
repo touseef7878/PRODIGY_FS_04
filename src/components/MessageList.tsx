@@ -34,7 +34,7 @@ const MessageList: React.FC<MessageListProps> = ({ messages, currentUserId }) =>
   }, [messages]);
 
   return (
-    <ScrollArea className="flex-1 p-4 border border-red-500"> {/* Added temporary border for debugging */}
+    <ScrollArea className="flex-1 p-4">
       <div className="space-y-4">
         {messages.map((message) => {
           const isCurrentUser = message.sender_id === currentUserId;
@@ -47,8 +47,7 @@ const MessageList: React.FC<MessageListProps> = ({ messages, currentUserId }) =>
               key={message.id}
               className={cn(
                 "flex items-start gap-3",
-                isCurrentUser ? "justify-end" : "justify-start",
-                "border border-blue-500 p-1" // Added temporary border for debugging
+                isCurrentUser ? "justify-end" : "justify-start"
               )}
             >
               {!isCurrentUser && (
@@ -62,8 +61,7 @@ const MessageList: React.FC<MessageListProps> = ({ messages, currentUserId }) =>
                   "max-w-[70%] rounded-lg p-3 text-sm",
                   isCurrentUser
                     ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-muted-foreground",
-                  "border border-green-500" // Added temporary border for debugging
+                    : "bg-muted text-muted-foreground"
                 )}
               >
                 <p className="font-medium text-xs mb-1">{senderName}</p>
