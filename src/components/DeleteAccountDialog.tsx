@@ -28,64 +28,33 @@ const DeleteAccountDialog: React.FC<DeleteAccountDialogProps> = ({ onAccountDele
   const { supabase, session } = useSession();
   const navigate = useNavigate();
   const currentUserId = session?.user?.id;
+  const accessToken = session?.access_token; // Get the access token for the Edge Function
 
   const handleDeleteAccount = async () => {
-    if (!currentUserId) {
+    if (!currentUserId || !accessToken) {
       showError("You must be logged in to delete your account.");
       return;
     }
 
     setIsDeleting(true);
     try {
-      // First, delete related data in public schema tables that reference auth.users
-      // Supabase RLS policies should handle user-specific deletions, but explicit deletion
-      // of related data in public tables is good practice before deleting the auth.user entry.
+      // Invoke the Edge Function to delete the user
+      const { data, error } = await supabase.functions.invoke('delete-user', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
 
-      // Delete user's chat read statuses
-      const { error: readStatusError } = await supabase
-        .from('user_chat_read_status')
-        .delete()
-        .eq('user_id', currentUserId);
-      if (readStatusError) throw readStatusError;
+      if (error) {
+        throw new Error(error.message);
+      }
 
-      // Delete public messages sent by the user
-      const { error: publicMsgError } = await supabase
-        .from('messages')
-        .delete()
-        .eq('sender_id', currentUserId);
-      if (publicMsgError) throw publicMsgError;
-
-      // Delete private messages sent by the user
-      const { error: privateMsgError } = await supabase
-        .from('private_messages')
-        .delete()
-        .eq('sender_id', currentUserId);
-      if (privateMsgError) throw privateMsgError;
-
-      // Delete private chats where the user is involved (this will cascade delete private messages)
-      const { error: privateChatError } = await supabase
-        .from('private_chats')
-        .delete()
-        .or(`user1_id.eq.${currentUserId},user2_id.eq.${currentUserId}`);
-      if (privateChatError) throw privateChatError;
-
-      // Delete public chat rooms created by the user (this will cascade delete public messages in those rooms)
-      const { error: chatRoomError } = await supabase
-        .from('chat_rooms')
-        .delete()
-        .eq('creator_id', currentUserId);
-      if (chatRoomError) throw chatRoomError;
-
-      // Delete the user's profile entry (this should cascade from auth.users, but explicit is safer)
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('id', currentUserId);
-      if (profileError) throw profileError;
-
-      // Finally, delete the user from auth.users
-      const { error: authError } = await supabase.auth.admin.deleteUser(currentUserId);
-      if (authError) throw authError;
+      // The Edge Function returns a JSON object, check for an error property
+      if (data && data.error) {
+        throw new Error(data.error);
+      }
 
       showSuccess("Your account and all associated data have been permanently deleted.");
       setOpen(false);
