@@ -9,7 +9,7 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { session, supabase } = useSession();
+  const { session } = useSession(); // Removed 'supabase' as it's not used
 
   if (session === null) {
     // User is not authenticated, redirect to login page

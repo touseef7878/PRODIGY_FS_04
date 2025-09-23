@@ -223,28 +223,28 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onS
       // Realtime subscriptions for new chat rooms, private chats, and messages
       const publicRoomChannel = supabase
         .channel('public:chat_rooms')
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_rooms' }, payload => {
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_rooms' }, _payload => { // Renamed to _payload
           fetchChats();
         })
         .subscribe();
 
       const privateChatChannel = supabase
         .channel('public:private_chats')
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'private_chats' }, payload => {
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'private_chats' }, _payload => { // Renamed to _payload
           fetchChats();
         })
         .subscribe();
 
       const publicMessageChannel = supabase
         .channel('public:messages')
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, _payload => { // Renamed to _payload
           fetchChats();
         })
         .subscribe();
 
       const privateMessageChannel = supabase
         .channel('public:private_messages')
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'private_messages' }, payload => {
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'private_messages' }, _payload => { // Renamed to _payload
           fetchChats();
         })
         .subscribe();
@@ -252,7 +252,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onS
       // Also listen for changes in user_chat_read_status to update unread counts
       const readStatusChannel = supabase
         .channel('public:user_chat_read_status')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'user_chat_read_status', filter: `user_id=eq.${currentUserId}` }, payload => {
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'user_chat_read_status', filter: `user_id=eq.${currentUserId}` }, _payload => { // Renamed to _payload
           fetchChats();
         })
         .subscribe();

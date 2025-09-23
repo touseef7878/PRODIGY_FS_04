@@ -140,7 +140,7 @@ const ChatPage: React.FC = () => {
         const incomingChatId = type === 'public' ? incomingMessage.chat_room_id : incomingMessage.private_chat_id;
 
         // Fetch sender profile
-        const { data: profileDataArray, error: profileError } = await supabase
+        const { data: profileDataArray } = await supabase
           .from('profiles')
           .select('username, first_name, last_name')
           .eq('id', incomingMessage.sender_id)
@@ -167,7 +167,7 @@ const ChatPage: React.FC = () => {
           // Message is for a different chat, show a notification
           let chatNameForNotification = 'a chat';
           if (type === 'public') {
-            const { data: chatRoom, error: roomError } = await supabase
+            const { data: chatRoom } = await supabase
               .from('chat_rooms')
               .select('name')
               .eq('id', incomingChatId)
@@ -176,7 +176,7 @@ const ChatPage: React.FC = () => {
               chatNameForNotification = chatRoom.name;
             }
           } else { // private chat
-            const { data: privateChat, error: privateChatError } = await supabase
+            const { data: privateChat } = await supabase
               .from('private_chats')
               .select(`
                 user1:user1_id(id, username, first_name),
@@ -192,8 +192,9 @@ const ChatPage: React.FC = () => {
           }
           showInfo(
             `New message from ${senderName} in ${chatNameForNotification}`,
-            incomingMessage.content.substring(0, 100) + (incomingMessage.content.length > 100 ? '...' : ''),
-            () => handleSelectChat(incomingChatId, chatNameForNotification, type) // Action to switch to the chat
+            (incomingMessage.content ?? '').substring(0, 100) + ((incomingMessage.content?.length ?? 0) > 100 ? '...' : ''),
+            // Ensure incomingChatId is not undefined before passing to handleSelectChat
+            incomingChatId ? () => handleSelectChat(incomingChatId, chatNameForNotification, type) : undefined
           );
           setSidebarRefreshKey(prev => prev + 1); // Trigger sidebar refresh for unread count
         }
@@ -268,7 +269,7 @@ const ChatPage: React.FC = () => {
   };
 
   // Callback for when chat data is cleared (from ProfileSettingsDialog -> ChatDataManagementSection)
-  const handleChatDataCleared = useCallback(() => {
+  const _handleChatDataCleared = useCallback(() => {
     // Force sidebar to re-fetch all chats
     setSidebarRefreshKey(prev => prev + 1);
     // Reset selected chat if it might have been deleted
@@ -289,7 +290,7 @@ const ChatPage: React.FC = () => {
           selectedChatId={selectedChatId}
           selectedChatType={selectedChatType}
           onSelectChat={handleSelectChat}
-          onChatsUpdated={() => { /* No action needed here, sidebarRefreshKey handles it */ }}
+          onChatsUpdated={_handleChatDataCleared} // Pass the callback here
         />
       }
     >

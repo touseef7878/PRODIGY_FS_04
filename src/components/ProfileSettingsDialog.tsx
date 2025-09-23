@@ -18,17 +18,11 @@ import { useSession } from '@/components/SessionContextProvider';
 import { showError, showSuccess } from '@/utils/toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
-import { ScrollArea } from '@/components/ui/scroll-area'; // Import ScrollArea
+import { ScrollArea } from '@/components/ui/scroll-area';
 import ChatDataManagementSection from './ChatDataManagementSection';
 import DeleteAccountDialog from './DeleteAccountDialog';
 
-interface Profile {
-  id: string;
-  username: string;
-  first_name?: string;
-  last_name?: string;
-  avatar_url?: string;
-}
+// Removed unused 'Profile' interface
 
 interface ProfileSettingsDialogProps {
   onProfileUpdated: () => void;
@@ -125,7 +119,7 @@ const ProfileSettingsDialog: React.FC<ProfileSettingsDialogProps> = ({ onProfile
         {loading ? (
           <div className="py-8 text-center text-muted-foreground">Loading profile...</div>
         ) : (
-          <ScrollArea className="h-[400px] pr-4"> {/* Added ScrollArea here */}
+          <ScrollArea className="h-[400px] pr-4">
             <div className="grid gap-4 py-4">
               {/* Profile Update Section */}
               <div className="space-y-2">

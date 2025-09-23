@@ -56,10 +56,20 @@ const DeleteAccountDialog: React.FC<DeleteAccountDialogProps> = ({ onAccountDele
         throw new Error(data.error);
       }
 
-      showSuccess("Your account and all associated data have been permanently deleted.");
+      // If Edge Function reports success, sign out the user on the client side
+      const { error: signOutError } = await supabase.auth.signOut();
+      if (signOutError) {
+        console.error("Error signing out after account deletion:", signOutError);
+        showError("Account deleted, but failed to sign out: " + signOutError.message);
+        // Still navigate to login, as the account is deleted
+      } else {
+        showSuccess("Your account and all associated data have been permanently deleted.");
+      }
+      
       setOpen(false);
       onAccountDeleted(); // Notify parent to refresh/redirect
       navigate('/login'); // Redirect to login page after account deletion
+
     } catch (error: any) {
       showError("Failed to delete account: " + error.message);
       console.error("Error deleting account:", error);

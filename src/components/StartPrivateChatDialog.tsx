@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Search, MessageSquare } from 'lucide-react';
+import { MessageSquare } from 'lucide-react'; // Removed 'Search'
 import { useSession } from '@/components/SessionContextProvider';
 import { showError, showSuccess } from '@/utils/toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -147,6 +147,9 @@ const StartPrivateChatDialog: React.FC<StartPrivateChatDialogProps> = ({ onChatS
             />
           </div>
           {loading && <p className="text-center text-muted-foreground">Searching...</p>}
+          {!loading && searchTerm.trim() && searchResults.length === 0 && (
+            <p className="text-center text-muted-foreground">No users found.</p>
+          )}
           {!loading && searchResults.length > 0 && (
             <ScrollArea className="h-[200px] w-full rounded-md border">
               <div className="p-2">
@@ -170,9 +173,6 @@ const StartPrivateChatDialog: React.FC<StartPrivateChatDialogProps> = ({ onChatS
                 ))}
               </div>
             </ScrollArea>
-          )}
-          {!loading && searchTerm.trim() && searchResults.length === 0 && (
-            <p className="text-center text-muted-foreground">No users found.</p>
           )}
         </div>
         <DialogFooter>

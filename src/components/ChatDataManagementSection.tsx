@@ -15,8 +15,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useSession } from '@/components/SessionContextProvider';
 import { showError, showSuccess } from '@/utils/toast';
-import { MessageSquareOff, Users, History, CheckCircle } from 'lucide-react';
-import { Separator } from '@/components/ui/separator';
+import { MessageSquareOff, Users, CheckCircle } from 'lucide-react'; // Removed 'History'
+// Removed 'Separator' as it's not used directly in this component's JSX
 
 interface ChatDataManagementSectionProps {
   onChatDataCleared: () => void;

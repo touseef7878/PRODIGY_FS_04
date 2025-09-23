@@ -36,7 +36,7 @@ const CreateChatRoomDialog: React.FC<CreateChatRoomDialogProps> = ({ onChatRoomC
       return;
     }
 
-    const { data, error } = await supabase
+    const { error } = await supabase // 'data' is no longer destructured as it's not used
       .from('chat_rooms')
       .insert({ name: chatRoomName.trim(), creator_id: session.user.id })
       .select();
