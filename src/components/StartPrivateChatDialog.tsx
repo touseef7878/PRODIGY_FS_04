@@ -47,10 +47,12 @@ const StartPrivateChatDialog: React.FC<StartPrivateChatDialogProps> = ({ onChatS
         return;
       }
       setLoading(true);
+      const searchLower = `%${searchTerm.trim().toLowerCase()}%`;
+
       const { data, error } = await supabase
         .from('profiles')
         .select('id, username, first_name, last_name, avatar_url')
-        .ilike('username', `%${searchTerm.trim()}%`)
+        .or(`username.ilike.${searchLower},first_name.ilike.${searchLower},last_name.ilike.${searchLower}`) // Search across multiple fields
         .neq('id', currentUserId); // Exclude current user
 
       if (error) {
@@ -128,7 +130,7 @@ const StartPrivateChatDialog: React.FC<StartPrivateChatDialogProps> = ({ onChatS
         <DialogHeader>
           <DialogTitle>Start Private Chat</DialogTitle>
           <DialogDescription>
-            Search for a user by username to start a private conversation.
+            Search for a user by username, first name, or last name to start a private conversation.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
@@ -141,7 +143,7 @@ const StartPrivateChatDialog: React.FC<StartPrivateChatDialogProps> = ({ onChatS
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="col-span-3"
-              placeholder="Search by username"
+              placeholder="Search by name or username"
             />
           </div>
           {loading && <p className="text-center text-muted-foreground">Searching...</p>}
