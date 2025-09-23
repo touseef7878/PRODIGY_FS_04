@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useSession } from '@/components/SessionContextProvider';
 import { showError, showSuccess } from '@/utils/toast';
-import { MessageSquareOff, Users, History } from 'lucide-react';
+import { MessageSquareOff, Users, History, CheckCircle } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 
 interface ChatDataManagementSectionProps {
@@ -28,7 +28,7 @@ const ChatDataManagementSection: React.FC<ChatDataManagementSectionProps> = ({ o
 
   const [isClearingPublicRooms, setIsClearingPublicRooms] = useState(false);
   const [isClearingPrivateChats, setIsClearingPrivateChats] = useState(false);
-  const [isClearingReadStatuses, setIsClearingReadStatuses] = useState(false);
+  const [isMarkingRead, setIsMarkingRead] = useState(false);
 
   const handleClearPublicChatRooms = async () => {
     if (!currentUserId) {
@@ -37,14 +37,17 @@ const ChatDataManagementSection: React.FC<ChatDataManagementSectionProps> = ({ o
     }
     setIsClearingPublicRooms(true);
     try {
+      // This will delete all public chat rooms created by the current user.
+      // Due to foreign key constraints with ON DELETE CASCADE, all messages within these rooms
+      // (regardless of sender) will also be deleted.
       const { error } = await supabase
         .from('chat_rooms')
         .delete()
         .eq('creator_id', currentUserId);
 
       if (error) throw error;
-      showSuccess("All public chat rooms you created have been cleared!");
-      onChatDataCleared();
+      showSuccess("All public chat rooms you created, and their messages, have been cleared!");
+      onChatDataCleared(); // Refresh sidebar and chat view
     } catch (error: any) {
       showError("Failed to clear public chat rooms: " + error.message);
       console.error("Error clearing public chat rooms:", error);
@@ -60,14 +63,17 @@ const ChatDataManagementSection: React.FC<ChatDataManagementSectionProps> = ({ o
     }
     setIsClearingPrivateChats(true);
     try {
+      // This will delete all private chats where the current user is involved.
+      // Due to foreign key constraints with ON DELETE CASCADE, all private messages within these chats
+      // (regardless of sender) will also be deleted.
       const { error } = await supabase
         .from('private_chats')
         .delete()
         .or(`user1_id.eq.${currentUserId},user2_id.eq.${currentUserId}`);
 
       if (error) throw error;
-      showSuccess("All private chats you are involved in have been cleared!");
-      onChatDataCleared();
+      showSuccess("All private chats you are involved in, and their messages, have been cleared!");
+      onChatDataCleared(); // Refresh sidebar and chat view
     } catch (error: any) {
       showError("Failed to clear private chats: " + error.message);
       console.error("Error clearing private chats:", error);
@@ -76,26 +82,39 @@ const ChatDataManagementSection: React.FC<ChatDataManagementSectionProps> = ({ o
     }
   };
 
-  const handleClearReadStatuses = async () => {
+  const handleMarkAllRead = async () => {
     if (!currentUserId) {
-      showError("You must be logged in to clear read statuses.");
+      showError("You must be logged in to mark messages as read.");
       return;
     }
-    setIsClearingReadStatuses(true);
+    setIsMarkingRead(true);
     try {
-      const { error } = await supabase
+      const now = new Date().toISOString();
+      // Update last_read_at for all public chat read statuses for the current user
+      const { error: publicReadError } = await supabase
         .from('user_chat_read_status')
-        .delete()
-        .eq('user_id', currentUserId);
+        .update({ last_read_at: now })
+        .eq('user_id', currentUserId)
+        .not('chat_room_id', 'is', null); // Only update public chat statuses
 
-      if (error) throw error;
-      showSuccess("Your chat read statuses have been cleared!");
-      onChatDataCleared();
+      if (publicReadError) throw publicReadError;
+
+      // Update last_read_at for all private chat read statuses for the current user
+      const { error: privateReadError } = await supabase
+        .from('user_chat_read_status')
+        .update({ last_read_at: now })
+        .eq('user_id', currentUserId)
+        .not('private_chat_id', 'is', null); // Only update private chat statuses
+
+      if (privateReadError) throw privateReadError;
+
+      showSuccess("All your messages have been marked as read!");
+      onChatDataCleared(); // Refresh sidebar to update unread counts
     } catch (error: any) {
-      showError("Failed to clear read statuses: " + error.message);
-      console.error("Error clearing read statuses:", error);
+      showError("Failed to mark all messages as read: " + error.message);
+      console.error("Error marking all messages as read:", error);
     } finally {
-      setIsClearingReadStatuses(false);
+      setIsMarkingRead(false);
     }
   };
 
@@ -103,8 +122,32 @@ const ChatDataManagementSection: React.FC<ChatDataManagementSectionProps> = ({ o
     <div className="space-y-4">
       <h3 className="text-lg font-semibold">Chat Data Management</h3>
       <p className="text-sm text-muted-foreground">
-        Manage and delete specific parts of your chat data.
+        Manage and delete specific parts of your chat data, or mark all messages as read.
       </p>
+
+      {/* Mark All Messages Read */}
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <Button variant="outline" className="w-full justify-start">
+            <CheckCircle className="mr-2 h-4 w-4" /> Mark All Messages Read
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Mark all messages as read?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action will update the read status for all your public and private chats to the current time.
+              Any unread badges will be cleared.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isMarkingRead}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleMarkAllRead} disabled={isMarkingRead}>
+              {isMarkingRead ? 'Marking...' : 'Mark All Read'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Clear Public Chat Rooms */}
       <AlertDialog>
@@ -117,8 +160,9 @@ const ChatDataManagementSection: React.FC<ChatDataManagementSectionProps> = ({ o
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete ALL public chat rooms you have created, along with all messages within them.
-              This will NOT delete public chat rooms created by other users, even if you participated in them.
+              This action cannot be undone. This will permanently delete ALL public chat rooms you have created.
+              <br /><br />
+              **Important:** Deleting a room you created will also permanently delete ALL messages within that room, regardless of who sent them. This action does NOT affect public chat rooms created by other users.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -141,36 +185,15 @@ const ChatDataManagementSection: React.FC<ChatDataManagementSectionProps> = ({ o
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete ALL private chats you are involved in, along with all messages within them.
+              This action cannot be undone. This will permanently delete ALL private chats you are involved in.
+              <br /><br />
+              **Important:** Deleting a private chat will also permanently delete ALL messages within that chat, regardless of who sent them. This action affects both your messages and the other user's messages in those specific private chats.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isClearingPrivateChats}>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleClearPrivateChats} disabled={isClearingPrivateChats} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
               {isClearingPrivateChats ? 'Clearing...' : 'Clear Private Chats'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Clear Read Statuses */}
-      <AlertDialog>
-        <AlertDialogTrigger asChild>
-          <Button variant="outline" className="w-full justify-start">
-            <History className="mr-2 h-4 w-4" /> Clear My Read Statuses
-          </Button>
-        </AlertDialogTrigger>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete all records of which chats you have read. This might cause previously read chats to appear as unread.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isClearingReadStatuses}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleClearReadStatuses} disabled={isClearingReadStatuses} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              {isClearingReadStatuses ? 'Clearing...' : 'Clear Read Statuses'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
