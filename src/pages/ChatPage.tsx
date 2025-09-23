@@ -83,6 +83,7 @@ const ChatPage: React.FC = () => {
   };
 
   useEffect(() => {
+    console.log(`[ChatPage] Setting up subscription for chat: ${selectedChatId}, type: ${selectedChatType}`);
     if (selectedChatId && selectedChatType) {
       fetchMessages(selectedChatId, selectedChatType);
 
@@ -96,28 +97,33 @@ const ChatPage: React.FC = () => {
             table: 'messages',
             filter: `chat_room_id=eq.${selectedChatId}`
           }, async (payload) => {
+            console.log("[ChatPage] Public chat real-time message received:", payload.new);
             const newMessageId = (payload.new as Message).id;
             const senderId = (payload.new as Message).sender_id;
             const content = (payload.new as Message).content;
             const createdAt = (payload.new as Message).created_at;
 
-            const { data: profileData, error: profileError } = await supabase
+            const { data: profileDataArray, error: profileError } = await supabase
               .from('profiles')
               .select('username, avatar_url, first_name, last_name')
               .eq('id', senderId)
-              .single();
+              .limit(1); // Use limit(1) for robustness
+
+            const profileData = profileDataArray && profileDataArray.length > 0 ? profileDataArray[0] : null;
 
             if (profileError) {
-              console.error("Error fetching sender profile for real-time update:", profileError);
-              setMessages((prevMessages) => [
-                ...prevMessages,
-                { id: newMessageId, sender_id: senderId, content: content, created_at: createdAt, profiles: null } as Message,
-              ]);
+              console.error("[ChatPage] Error fetching sender profile for real-time update:", profileError);
+              setMessages((prevMessages) => {
+                const newMsg = { id: newMessageId, sender_id: senderId, content: content, created_at: createdAt, profiles: null } as Message;
+                console.log("[ChatPage] Adding message without profile:", newMsg);
+                return [...prevMessages, newMsg];
+              });
             } else {
-              setMessages((prevMessages) => [
-                ...prevMessages,
-                { id: newMessageId, sender_id: senderId, content: content, created_at: createdAt, profiles: profileData ? [profileData] : null } as Message,
-              ]);
+              setMessages((prevMessages) => {
+                const newMsg = { id: newMessageId, sender_id: senderId, content: content, created_at: createdAt, profiles: profileData ? [profileData] : null } as Message;
+                console.log("[ChatPage] Adding message with profile:", newMsg);
+                return [...prevMessages, newMsg];
+              });
             }
           })
           .subscribe();
@@ -130,38 +136,46 @@ const ChatPage: React.FC = () => {
             table: 'private_messages',
             filter: `private_chat_id=eq.${selectedChatId}`
           }, async (payload) => {
+            console.log("[ChatPage] Private chat real-time message received:", payload.new);
             const newMessageId = (payload.new as Message).id;
             const senderId = (payload.new as Message).sender_id;
             const content = (payload.new as Message).content;
             const createdAt = (payload.new as Message).created_at;
 
-            const { data: profileData, error: profileError } = await supabase
+            const { data: profileDataArray, error: profileError } = await supabase
               .from('profiles')
               .select('username, avatar_url, first_name, last_name')
               .eq('id', senderId)
-              .single();
+              .limit(1); // Use limit(1) for robustness
+
+            const profileData = profileDataArray && profileDataArray.length > 0 ? profileDataArray[0] : null;
 
             if (profileError) {
-              console.error("Error fetching sender profile for real-time update:", profileError);
-              setMessages((prevMessages) => [
-                ...prevMessages,
-                { id: newMessageId, sender_id: senderId, content: content, created_at: createdAt, profiles: null } as Message,
-              ]);
+              console.error("[ChatPage] Error fetching sender profile for real-time update:", profileError);
+              setMessages((prevMessages) => {
+                const newMsg = { id: newMessageId, sender_id: senderId, content: content, created_at: createdAt, profiles: null } as Message;
+                console.log("[ChatPage] Adding message without profile:", newMsg);
+                return [...prevMessages, newMsg];
+              });
             } else {
-              setMessages((prevMessages) => [
-                ...prevMessages,
-                { id: newMessageId, sender_id: senderId, content: content, created_at: createdAt, profiles: profileData ? [profileData] : null } as Message,
-              ]);
+              setMessages((prevMessages) => {
+                const newMsg = { id: newMessageId, sender_id: senderId, content: content, created_at: createdAt, profiles: profileData ? [profileData] : null } as Message;
+                console.log("[ChatPage] Adding message with profile:", newMsg);
+                return [...prevMessages, newMsg];
+              });
             }
           })
           .subscribe();
       }
 
       return () => {
+        console.log(`[ChatPage] Tearing down subscription for chat: ${selectedChatId}, type: ${selectedChatType}`);
         if (channel) {
           supabase.removeChannel(channel);
         }
       };
+    } else {
+      console.log("[ChatPage] No chat selected, skipping subscription setup.");
     }
   }, [selectedChatId, selectedChatType, supabase]);
 
