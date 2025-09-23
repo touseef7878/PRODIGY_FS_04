@@ -10,7 +10,7 @@ interface Message {
   sender_id: string;
   content: string;
   created_at: string;
-  profiles: Array<{ // Changed to Array
+  profiles: Array<{
     username: string;
     avatar_url?: string;
     first_name?: string;
@@ -24,19 +24,17 @@ interface MessageListProps {
 }
 
 const MessageList: React.FC<MessageListProps> = ({ messages, currentUserId }) => {
-  const scrollAreaRef = React.useRef<HTMLDivElement>(null);
+  const messagesEndRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
-    if (scrollAreaRef.current) {
-      scrollAreaRef.current.scrollTo({
-        top: scrollAreaRef.current.scrollHeight,
-        behavior: 'smooth',
-      });
+    console.log("[MessageList] Messages prop updated:", messages); // Log to confirm prop updates
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages]);
 
   return (
-    <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
+    <ScrollArea className="flex-1 p-4">
       <div className="space-y-4">
         {messages.map((message) => {
           const isCurrentUser = message.sender_id === currentUserId;
@@ -78,6 +76,7 @@ const MessageList: React.FC<MessageListProps> = ({ messages, currentUserId }) =>
             </div>
           );
         })}
+        <div ref={messagesEndRef} /> {/* Invisible element to scroll to */}
       </div>
     </ScrollArea>
   );
