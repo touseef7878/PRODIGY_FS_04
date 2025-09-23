@@ -97,7 +97,7 @@ const ChatPage: React.FC = () => {
             table: 'messages',
             filter: `chat_room_id=eq.${selectedChatId}`
           }, async (payload) => {
-            console.log("[ChatPage] Real-time INSERT event received for public chat:", payload.new); // New log
+            console.log("[ChatPage] Real-time INSERT event received for public chat:", payload.new);
             const newMessageId = (payload.new as Message).id;
             const senderId = (payload.new as Message).sender_id;
             const content = (payload.new as Message).content;
@@ -109,24 +109,21 @@ const ChatPage: React.FC = () => {
               .eq('id', senderId)
               .limit(1);
 
-            console.log("[ChatPage] Profile fetch for real-time message - Data:", profileDataArray, "Error:", profileError);
-
             const profileData = profileDataArray && profileDataArray.length > 0 ? profileDataArray[0] : null;
 
-            if (profileError) {
-              console.error("[ChatPage] Error fetching sender profile for real-time update:", profileError);
-              setMessages((prevMessages) => {
-                const newMsg = { id: newMessageId, sender_id: senderId, content: content, created_at: createdAt, profiles: null } as Message;
-                console.log("[ChatPage] Adding message without profile:", newMsg);
-                return [...prevMessages, newMsg];
-              });
-            } else {
-              setMessages((prevMessages) => {
-                const newMsg = { id: newMessageId, sender_id: senderId, content: content, created_at: createdAt, profiles: profileData ? [profileData] : null } as Message;
-                console.log("[ChatPage] Adding message with profile:", newMsg);
-                return [...prevMessages, newMsg];
-              });
-            }
+            setMessages((prevMessages) => {
+                const newMsg: Message = {
+                    id: newMessageId,
+                    sender_id: senderId,
+                    content: content,
+                    created_at: createdAt,
+                    profiles: profileData ? [profileData] : [], // Ensure profiles is always an array
+                };
+                console.log("[ChatPage] Adding new message to state (public):", newMsg);
+                const updatedMessages = [...prevMessages, newMsg];
+                console.log("[ChatPage] Messages state after adding (public):", updatedMessages);
+                return updatedMessages;
+            });
           })
           .subscribe();
       } else { // selectedChatType === 'private'
@@ -138,7 +135,7 @@ const ChatPage: React.FC = () => {
             table: 'private_messages',
             filter: `private_chat_id=eq.${selectedChatId}`
           }, async (payload) => {
-            console.log("[ChatPage] Real-time INSERT event received for private chat:", payload.new); // New log
+            console.log("[ChatPage] Real-time INSERT event received for private chat:", payload.new);
             const newMessageId = (payload.new as Message).id;
             const senderId = (payload.new as Message).sender_id;
             const content = (payload.new as Message).content;
@@ -150,24 +147,21 @@ const ChatPage: React.FC = () => {
               .eq('id', senderId)
               .limit(1);
 
-            console.log("[ChatPage] Profile fetch for real-time message - Data:", profileDataArray, "Error:", profileError);
-
             const profileData = profileDataArray && profileDataArray.length > 0 ? profileDataArray[0] : null;
 
-            if (profileError) {
-              console.error("[ChatPage] Error fetching sender profile for real-time update:", profileError);
-              setMessages((prevMessages) => {
-                const newMsg = { id: newMessageId, sender_id: senderId, content: content, created_at: createdAt, profiles: null } as Message;
-                console.log("[ChatPage] Adding message without profile:", newMsg);
-                return [...prevMessages, newMsg];
-              });
-            } else {
-              setMessages((prevMessages) => {
-                const newMsg = { id: newMessageId, sender_id: senderId, content: content, created_at: createdAt, profiles: profileData ? [profileData] : null } as Message;
-                console.log("[ChatPage] Adding message with profile:", newMsg);
-                return [...prevMessages, newMsg];
-              });
-            }
+            setMessages((prevMessages) => {
+                const newMsg: Message = {
+                    id: newMessageId,
+                    sender_id: senderId,
+                    content: content,
+                    created_at: createdAt,
+                    profiles: profileData ? [profileData] : [], // Ensure profiles is always an array
+                };
+                console.log("[ChatPage] Adding new message to state (private):", newMsg);
+                const updatedMessages = [...prevMessages, newMsg];
+                console.log("[ChatPage] Messages state after adding (private):", updatedMessages);
+                return updatedMessages;
+            });
           })
           .subscribe();
       }
@@ -216,6 +210,8 @@ const ChatPage: React.FC = () => {
       console.error("Error sending message:", error);
     }
   };
+
+  console.log("[ChatPage] Rendered. Current messages state:", messages); // NEW LOG HERE
 
   return (
     <ChatLayout
