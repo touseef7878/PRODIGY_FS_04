@@ -110,6 +110,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onS
       showError("Failed to load private chats: " + privateError.message);
       console.error("Error fetching private chats:", privateError);
     } else {
+      console.log("[Sidebar] Raw private conversations data:", privateConvos); // Added log
       const typedPrivateConvos = privateConvos as RawPrivateChatData[];
 
       const convosWithOtherUser = typedPrivateConvos.map(convo => {
@@ -117,7 +118,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onS
         const user2Profile = convo.user2?.[0];
 
         if (!user1Profile || !user2Profile) {
-          console.warn("Missing profile data for private chat:", convo.id);
+          console.warn("Missing profile data for private chat:", convo.id, "User1:", convo.user1, "User2:", convo.user2); // Enhanced log
           return null;
         }
 

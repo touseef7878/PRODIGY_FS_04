@@ -107,7 +107,9 @@ const ChatPage: React.FC = () => {
               .from('profiles')
               .select('username, avatar_url, first_name, last_name')
               .eq('id', senderId)
-              .limit(1); // Use limit(1) for robustness
+              .limit(1);
+
+            console.log("[ChatPage] Profile fetch for real-time message - Data:", profileDataArray, "Error:", profileError);
 
             const profileData = profileDataArray && profileDataArray.length > 0 ? profileDataArray[0] : null;
 
@@ -146,7 +148,9 @@ const ChatPage: React.FC = () => {
               .from('profiles')
               .select('username, avatar_url, first_name, last_name')
               .eq('id', senderId)
-              .limit(1); // Use limit(1) for robustness
+              .limit(1);
+
+            console.log("[ChatPage] Profile fetch for real-time message - Data:", profileDataArray, "Error:", profileError);
 
             const profileData = profileDataArray && profileDataArray.length > 0 ? profileDataArray[0] : null;
 
@@ -240,7 +244,7 @@ const ChatPage: React.FC = () => {
                 <p>Loading messages...</p>
               </div>
             ) : (
-              <MessageList messages={messages} currentUserId={currentUserId} />
+              <MessageList key={selectedChatId} messages={messages} currentUserId={currentUserId} />
             )}
             <MessageInput onSendMessage={handleSendMessage} />
           </>
