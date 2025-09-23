@@ -7,11 +7,12 @@ import ChatPage from "./pages/ChatPage";
 import NotFound from "./pages/NotFound";
 import AuthLayout from "./components/layout/AuthLayout";
 import { Toaster } from "@/components/ui/sonner";
-import SessionContextProvider from "./components/SessionContextProvider"; // Import SessionContextProvider
+import SessionContextProvider from "./components/SessionContextProvider";
+import ProtectedRoute from "./components/ProtectedRoute"; // Import ProtectedRoute
 
 const App = () => (
   <BrowserRouter>
-    <SessionContextProvider> {/* Wrap the entire app with SessionContextProvider */}
+    <SessionContextProvider>
       <Routes>
         <Route path="/" element={<Index />} />
         <Route
@@ -30,7 +31,15 @@ const App = () => (
             </AuthLayout>
           }
         />
-        <Route path="/chat" element={<ChatPage />} />
+        {/* Protect the /chat route */}
+        <Route
+          path="/chat"
+          element={
+            <ProtectedRoute>
+              <ChatPage />
+            </ProtectedRoute>
+          }
+        />
         <Route path="*" element={<NotFound />} />
       </Routes>
       <Toaster />
