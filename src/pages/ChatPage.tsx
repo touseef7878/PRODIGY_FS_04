@@ -6,7 +6,7 @@ import Sidebar from '@/components/Sidebar';
 import { MadeWithDyad } from '@/components/made-with-dyad';
 import MessageInput from '@/components/MessageInput';
 import MessageList from '@/components/MessageList';
-import { showError, showInfo } from '@/utils/toast'; // Import showInfo
+import { showError, showInfo } from '@/utils/toast';
 import { useSession } from '@/components/SessionContextProvider';
 
 interface Message {
@@ -14,8 +14,8 @@ interface Message {
   sender_id: string;
   content: string;
   created_at: string;
-  chat_room_id?: string; // Added for public messages
-  private_chat_id?: string; // Added for private messages
+  chat_room_id?: string;
+  private_chat_id?: string;
   profiles: Array<{
     username: string;
     avatar_url?: string;
@@ -31,8 +31,40 @@ const ChatPage: React.FC = () => {
   const [selectedChatType, setSelectedChatType] = useState<'public' | 'private' | undefined>(undefined);
   const [messages, setMessages] = useState<Message[]>([]);
   const [loadingMessages, setLoadingMessages] = useState(false);
+  const [sidebarRefreshKey, setSidebarRefreshKey] = useState(0); // Key to force sidebar re-render
 
   const currentUserId = session?.user?.id;
+
+  const markChatAsRead = useCallback(async (chatId: string, chatType: 'public' | 'private') => {
+    if (!currentUserId) return;
+
+    const now = new Date().toISOString();
+    const updateData = {
+      user_id: currentUserId,
+      last_read_at: now,
+      created_at: now, // Also set created_at for new inserts
+    };
+
+    let query;
+    if (chatType === 'public') {
+      query = supabase
+        .from('user_chat_read_status')
+        .upsert({ ...updateData, chat_room_id: chatId }, { onConflict: 'user_id,chat_room_id' });
+    } else { // private
+      query = supabase
+        .from('user_chat_read_status')
+        .upsert({ ...updateData, private_chat_id: chatId }, { onConflict: 'user_id,private_chat_id' });
+    }
+
+    const { error } = await query;
+
+    if (error) {
+      console.error("Error marking chat as read:", error);
+    } else {
+      console.log(`[ChatPage] Chat ${chatId} marked as read for user ${currentUserId}`);
+      setSidebarRefreshKey(prev => prev + 1); // Trigger sidebar refresh
+    }
+  }, [currentUserId, supabase]);
 
   const handleSelectChat = useCallback((chatId: string, chatName: string, chatType: 'public' | 'private') => {
     setSelectedChatId(chatId);
@@ -40,7 +72,8 @@ const ChatPage: React.FC = () => {
     setSelectedChatType(chatType);
     setMessages([]); // Clear messages when switching chats
     console.log(`[ChatPage] Chat selected: ID=${chatId}, Name=${chatName}, Type=${chatType}. Messages cleared.`);
-  }, []); // State setters are stable, so no dependencies needed here
+    markChatAsRead(chatId, chatType); // Mark as read when selected
+  }, [markChatAsRead]);
 
   const fetchMessages = async (chatId: string, chatType: 'public' | 'private') => {
     setLoadingMessages(true);
@@ -126,6 +159,8 @@ const ChatPage: React.FC = () => {
             console.log("[ChatPage] Messages state after adding (current chat):", updatedMessages);
             return updatedMessages;
           });
+          // Mark as read since the user is currently viewing this chat
+          markChatAsRead(incomingChatId, type);
         } else {
           // Message is for a different chat, show a notification
           let chatNameForNotification = 'a chat';
@@ -158,6 +193,7 @@ const ChatPage: React.FC = () => {
             incomingMessage.content.substring(0, 100) + (incomingMessage.content.length > 100 ? '...' : ''),
             () => handleSelectChat(incomingChatId, chatNameForNotification, type) // Action to switch to the chat
           );
+          setSidebarRefreshKey(prev => prev + 1); // Trigger sidebar refresh for unread count
         }
       };
 
@@ -195,7 +231,7 @@ const ChatPage: React.FC = () => {
     } else {
       console.log("[ChatPage] No chat selected, skipping subscription setup.");
     }
-  }, [selectedChatId, selectedChatType, supabase, currentUserId, handleSelectChat]);
+  }, [selectedChatId, selectedChatType, supabase, currentUserId, handleSelectChat, markChatAsRead]);
 
   const handleSendMessage = async (content: string) => {
     if (!selectedChatId || !currentUserId || !selectedChatType) {
@@ -225,6 +261,7 @@ const ChatPage: React.FC = () => {
       console.error("Error sending message:", error);
     } else {
       console.log("[ChatPage] Message sent successfully (DB insert acknowledged).");
+      markChatAsRead(selectedChatId, selectedChatType); // Mark as read after sending
     }
   };
 
@@ -234,9 +271,11 @@ const ChatPage: React.FC = () => {
     <ChatLayout
       sidebar={
         <Sidebar
+          key={sidebarRefreshKey} // Use key to force re-render and re-fetch chats
           selectedChatId={selectedChatId}
           selectedChatType={selectedChatType}
           onSelectChat={handleSelectChat}
+          onChatsUpdated={() => { /* No action needed here, sidebarRefreshKey handles it */ }}
         />
       }
     >

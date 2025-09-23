@@ -9,8 +9,9 @@ import { useSession } from '@/components/SessionContextProvider';
 import { showError } from '@/utils/toast';
 import CreateChatRoomDialog from './CreateChatRoomDialog';
 import StartPrivateChatDialog from './StartPrivateChatDialog';
-import ProfileSettingsDialog from './ProfileSettingsDialog'; // Import the new component
+import ProfileSettingsDialog from './ProfileSettingsDialog';
 import { Users, MessageSquare } from 'lucide-react';
+import { Badge } from '@/components/ui/badge'; // Import Badge component
 
 interface ChatRoom {
   id: string;
@@ -20,7 +21,6 @@ interface ChatRoom {
   unread_count?: number;
 }
 
-// Define a type for the profile data returned by the join
 interface SupabaseProfile {
   id: string;
   username: string;
@@ -29,7 +29,6 @@ interface SupabaseProfile {
   avatar_url?: string;
 }
 
-// Define a type for the raw private chat data from Supabase
 interface RawPrivateChatData {
   id: string;
   user1_id: string;
@@ -52,9 +51,10 @@ interface SidebarProps {
   selectedChatId?: string;
   selectedChatType?: 'public' | 'private';
   onSelectChat: (chatId: string, chatName: string, chatType: 'public' | 'private') => void;
+  onChatsUpdated: () => void; // Callback to notify parent when chats are updated
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onSelectChat }) => {
+const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onSelectChat, onChatsUpdated }) => {
   const { supabase, session } = useSession();
   const [chatRooms, setChatRooms] = useState<ChatRoom[]>([]);
   const [privateChats, setPrivateChats] = useState<PrivateChat[]>([]);
@@ -71,25 +71,61 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onS
     // Fetch public chat rooms
     const { data: publicRooms, error: publicError } = await supabase
       .from('chat_rooms')
-      .select('id, name, creator_id, messages(content, created_at)')
+      .select(`
+        id,
+        name,
+        creator_id,
+        messages(content, created_at),
+        user_chat_read_status!left(last_read_at)
+      `)
       .order('created_at', { ascending: false });
 
     if (publicError) {
       showError("Failed to load public chat rooms: " + publicError.message);
       console.error("Error fetching public chat rooms:", publicError);
     } else {
-      const roomsWithLastMessage = publicRooms.map(room => {
+      const roomsWithLastMessageAndUnread = await Promise.all(publicRooms.map(async (room) => {
         const lastMessage = room.messages && room.messages.length > 0
           ? room.messages.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0].content
           : 'No messages yet.';
+
+        const lastReadAt = room.user_chat_read_status?.[0]?.last_read_at;
+
+        let unread_count = 0;
+        if (lastReadAt) {
+          const { count, error: countError } = await supabase
+            .from('messages')
+            .select('id', { count: 'exact' })
+            .eq('chat_room_id', room.id)
+            .gt('created_at', lastReadAt);
+
+          if (countError) {
+            console.error("Error counting unread public messages:", countError);
+          } else {
+            unread_count = count || 0;
+          }
+        } else {
+          // If no read status, all messages are unread
+          const { count, error: countError } = await supabase
+            .from('messages')
+            .select('id', { count: 'exact' })
+            .eq('chat_room_id', room.id);
+          if (countError) {
+            console.error("Error counting all public messages:", countError);
+          } else {
+            unread_count = count || 0;
+          }
+        }
+
         return {
           id: room.id,
           name: room.name,
           creator_id: room.creator_id,
           last_message_content: lastMessage,
+          unread_count: unread_count,
         };
-      });
-      setChatRooms(roomsWithLastMessage);
+      }));
+      setChatRooms(roomsWithLastMessageAndUnread);
     }
 
     // Fetch private chats
@@ -101,7 +137,8 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onS
         user2_id,
         private_messages(content, created_at),
         user1:user1_id(id, username, first_name, last_name, avatar_url),
-        user2:user2_id(id, username, first_name, last_name, avatar_url)
+        user2:user2_2(id, username, first_name, last_name, avatar_url),
+        user_chat_read_status!left(last_read_at)
       `)
       .or(`user1_id.eq.${currentUserId},user2_id.eq.${currentUserId}`)
       .order('created_at', { ascending: false });
@@ -110,15 +147,13 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onS
       showError("Failed to load private chats: " + privateError.message);
       console.error("Error fetching private chats:", privateError);
     } else {
-      console.log("[Sidebar] Raw private conversations data:", privateConvos); // Added log
-      const typedPrivateConvos = privateConvos as RawPrivateChatData[];
+      const typedPrivateConvos = privateConvos as (RawPrivateChatData & { user_chat_read_status: Array<{ last_read_at: string }> | null })[];
 
-      const convosWithOtherUser = typedPrivateConvos.map(convo => {
+      const convosWithOtherUserAndUnread = (await Promise.all(typedPrivateConvos.map(async (convo) => {
         const user1Profile = convo.user1?.[0];
         const user2Profile = convo.user2?.[0];
 
         if (!user1Profile || !user2Profile) {
-          // Log the actual arrays to see if they are empty or null
           console.warn("Missing profile data for private chat:", convo.id, "User1 array:", convo.user1, "User2 array:", convo.user2);
           return null;
         }
@@ -127,32 +162,64 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onS
         const lastMessage = convo.private_messages && convo.private_messages.length > 0
           ? convo.private_messages.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0].content
           : 'No messages yet.';
+
+        const lastReadAt = convo.user_chat_read_status?.[0]?.last_read_at;
+
+        let unread_count = 0;
+        if (lastReadAt) {
+          const { count, error: countError } = await supabase
+            .from('private_messages')
+            .select('id', { count: 'exact' })
+            .eq('private_chat_id', convo.id)
+            .gt('created_at', lastReadAt);
+
+          if (countError) {
+            console.error("Error counting unread private messages:", countError);
+          } else {
+            unread_count = count || 0;
+          }
+        } else {
+          // If no read status, all messages are unread
+          const { count, error: countError } = await supabase
+            .from('private_messages')
+            .select('id', { count: 'exact' })
+            .eq('private_chat_id', convo.id);
+          if (countError) {
+            console.error("Error counting all private messages:", countError);
+          } else {
+            unread_count = count || 0;
+          }
+        }
+
         return {
           id: convo.id,
           user1_id: convo.user1_id,
           user2_id: convo.user2_id,
           other_user_profile: otherUser,
           last_message_content: lastMessage,
+          unread_count: unread_count,
         };
-      }).filter(Boolean) as PrivateChat[];
-      setPrivateChats(convosWithOtherUser);
+      }))).filter(Boolean) as PrivateChat[];
+      setPrivateChats(convosWithOtherUserAndUnread);
     }
 
     setLoading(false);
+    onChatsUpdated(); // Notify parent that chats have been updated
   };
 
   useEffect(() => {
     if (session) {
       fetchChats();
 
-      const publicChannel = supabase
+      // Realtime subscriptions for new chat rooms, private chats, and messages
+      const publicRoomChannel = supabase
         .channel('public:chat_rooms')
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_rooms' }, payload => {
           fetchChats();
         })
         .subscribe();
 
-      const privateChannel = supabase
+      const privateChatChannel = supabase
         .channel('public:private_chats')
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'private_chats' }, payload => {
           fetchChats();
@@ -173,11 +240,20 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onS
         })
         .subscribe();
 
+      // Also listen for changes in user_chat_read_status to update unread counts
+      const readStatusChannel = supabase
+        .channel('public:user_chat_read_status')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'user_chat_read_status', filter: `user_id=eq.${currentUserId}` }, payload => {
+          fetchChats();
+        })
+        .subscribe();
+
       return () => {
-        supabase.removeChannel(publicChannel);
-        supabase.removeChannel(privateChannel);
+        supabase.removeChannel(publicRoomChannel);
+        supabase.removeChannel(privateChatChannel);
         supabase.removeChannel(publicMessageChannel);
         supabase.removeChannel(privateMessageChannel);
+        supabase.removeChannel(readStatusChannel);
       };
     }
   }, [session, currentUserId]);
@@ -200,7 +276,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onS
             onSelectChat(id, name, type);
             fetchChats();
           }} />
-          <ProfileSettingsDialog onProfileUpdated={fetchChats} /> {/* Added ProfileSettingsDialog */}
+          <ProfileSettingsDialog onProfileUpdated={fetchChats} />
         </div>
       </div>
       <Separator />
@@ -230,6 +306,11 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onS
                       <div className="flex-1">
                         <div className="flex items-center justify-between">
                           <p className="font-medium">{chat.name}</p>
+                          {chat.unread_count && chat.unread_count > 0 && (
+                            <Badge className="bg-green-500 text-white rounded-full px-2 py-0.5 text-xs">
+                              {chat.unread_count}
+                            </Badge>
+                          )}
                         </div>
                         <p className="text-xs text-muted-foreground">
                           {chat.last_message_content?.substring(0, 30)}
@@ -261,6 +342,11 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onS
                       <div className="flex-1">
                         <div className="flex items-center justify-between">
                           <p className="font-medium">{chat.other_user_profile.first_name || chat.other_user_profile.username}</p>
+                          {chat.unread_count && chat.unread_count > 0 && (
+                            <Badge className="bg-green-500 text-white rounded-full px-2 py-0.5 text-xs">
+                              {chat.unread_count}
+                            </Badge>
+                          )}
                         </div>
                         <p className="text-xs text-muted-foreground">
                           {chat.last_message_content?.substring(0, 30)}
