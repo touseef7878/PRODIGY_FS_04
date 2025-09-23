@@ -90,6 +90,8 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onS
           : 'No messages yet.';
 
         const lastReadAt = room.user_chat_read_status?.[0]?.last_read_at;
+        console.log(`[Sidebar] Public Room ${room.name} (ID: ${room.id}): lastReadAt = ${lastReadAt}`);
+
 
         let unread_count = 0;
         if (lastReadAt) {
@@ -103,6 +105,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onS
             console.error("Error counting unread public messages:", countError);
           } else {
             unread_count = count || 0;
+            console.log(`[Sidebar] Public Room ${room.name}: Unread count (after lastReadAt) = ${unread_count}`);
           }
         } else {
           // If no read status, all messages are unread
@@ -114,6 +117,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onS
             console.error("Error counting all public messages:", countError);
           } else {
             unread_count = count || 0;
+            console.log(`[Sidebar] Public Room ${room.name}: Unread count (no lastReadAt) = ${unread_count}`);
           }
         }
 
@@ -137,7 +141,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onS
         user2_id,
         private_messages(content, created_at),
         user1:user1_id(id, username, first_name, last_name, avatar_url),
-        user2:user2_2(id, username, first_name, last_name, avatar_url),
+        user2:user2_id(id, username, first_name, last_name, avatar_url),
         user_chat_read_status!left(last_read_at)
       `)
       .or(`user1_id.eq.${currentUserId},user2_id.eq.${currentUserId}`)
@@ -164,6 +168,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onS
           : 'No messages yet.';
 
         const lastReadAt = convo.user_chat_read_status?.[0]?.last_read_at;
+        console.log(`[Sidebar] Private Chat with ${otherUser.username} (ID: ${convo.id}): lastReadAt = ${lastReadAt}`);
 
         let unread_count = 0;
         if (lastReadAt) {
@@ -177,9 +182,9 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onS
             console.error("Error counting unread private messages:", countError);
           } else {
             unread_count = count || 0;
+            console.log(`[Sidebar] Private Chat with ${otherUser.username}: Unread count (after lastReadAt) = ${unread_count}`);
           }
         } else {
-          // If no read status, all messages are unread
           const { count, error: countError } = await supabase
             .from('private_messages')
             .select('id', { count: 'exact' })
@@ -188,9 +193,9 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onS
             console.error("Error counting all private messages:", countError);
           } else {
             unread_count = count || 0;
+            console.log(`[Sidebar] Private Chat with ${otherUser.username}: Unread count (no lastReadAt) = ${unread_count}`);
           }
         }
-
         return {
           id: convo.id,
           user1_id: convo.user1_id,
