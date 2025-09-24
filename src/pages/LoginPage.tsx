@@ -16,9 +16,9 @@ const LoginPage: React.FC = () => {
   }, [session, navigate]);
 
   return (
-    <Card className="w-full max-w-md mx-auto">
+    <Card className="w-full max-w-md mx-auto shadow-lg border-border">
       <CardHeader className="text-center">
-        <CardTitle className="text-2xl">Login</CardTitle>
+        <CardTitle className="text-2xl text-foreground">Login</CardTitle>
       </CardHeader>
       <CardContent>
         <Auth
@@ -29,13 +29,25 @@ const LoginPage: React.FC = () => {
             variables: {
               default: {
                 colors: {
-                  brand: 'hsl(var(--primary))',
-                  brandAccent: 'hsl(var(--primary-foreground))',
+                  brand: `hsl(var(--primary))`,
+                  brandAccent: `hsl(var(--primary-foreground))`,
+                  // Add more specific overrides for better control
+                  defaultButtonBackground: `hsl(var(--primary))`,
+                  defaultButtonBackgroundHover: `hsl(var(--primary) / 0.9)`,
+                  defaultButtonBorder: `hsl(var(--border))`,
+                  defaultButtonText: `hsl(var(--primary-foreground))`,
+                  inputBackground: `hsl(var(--input))`,
+                  inputBorder: `hsl(var(--border))`,
+                  inputBorderHover: `hsl(var(--ring))`,
+                  inputBorderFocus: `hsl(var(--ring))`,
+                  inputText: `hsl(var(--foreground))`,
+                  anchorTextColor: `hsl(var(--primary))`,
+                  anchorTextHoverColor: `hsl(var(--primary) / 0.9)`,
                 },
               },
             },
           }}
-          theme="light"
+          theme="light" // Explicitly set to light theme
           view="sign_in" // Explicitly set to sign_in view
         />
       </CardContent>

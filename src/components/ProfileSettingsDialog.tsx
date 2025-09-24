@@ -127,7 +127,7 @@ const ProfileSettingsDialog: React.FC<ProfileSettingsDialogProps> = ({ onProfile
           <span className="sr-only">Profile Settings</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] shadow-lg border-border">
         <DialogHeader>
           <DialogTitle>Profile Settings</DialogTitle>
           <DialogDescription>

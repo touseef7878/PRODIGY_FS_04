@@ -15,8 +15,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useSession } from '@/components/SessionContextProvider';
 import { showError, showSuccess } from '@/utils/toast';
-import { MessageSquareOff, Users, CheckCircle } from 'lucide-react'; // Removed 'History'
-// Removed 'Separator' as it's not used directly in this component's JSX
+import { MessageSquareOff, Users, CheckCircle } from 'lucide-react';
+import { Separator } from '@/components/ui/separator'; // Re-import Separator
 
 interface ChatDataManagementSectionProps {
   onChatDataCleared: () => void;
@@ -132,7 +132,7 @@ const ChatDataManagementSection: React.FC<ChatDataManagementSectionProps> = ({ o
             <CheckCircle className="mr-2 h-4 w-4" /> Mark All Messages Read
           </Button>
         </AlertDialogTrigger>
-        <AlertDialogContent>
+        <AlertDialogContent className="shadow-lg border-border">
           <AlertDialogHeader>
             <AlertDialogTitle>Mark all messages as read?</AlertDialogTitle>
             <AlertDialogDescription>
@@ -149,6 +149,8 @@ const ChatDataManagementSection: React.FC<ChatDataManagementSectionProps> = ({ o
         </AlertDialogContent>
       </AlertDialog>
 
+      <Separator className="my-4" /> {/* Re-added Separator */}
+
       {/* Clear Public Chat Rooms */}
       <AlertDialog>
         <AlertDialogTrigger asChild>
@@ -156,7 +158,7 @@ const ChatDataManagementSection: React.FC<ChatDataManagementSectionProps> = ({ o
             <Users className="mr-2 h-4 w-4" /> Clear My Public Chat Rooms
           </Button>
         </AlertDialogTrigger>
-        <AlertDialogContent>
+        <AlertDialogContent className="shadow-lg border-border">
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
@@ -174,6 +176,8 @@ const ChatDataManagementSection: React.FC<ChatDataManagementSectionProps> = ({ o
         </AlertDialogContent>
       </AlertDialog>
 
+      <Separator className="my-4" /> {/* Re-added Separator */}
+
       {/* Clear Private Chats */}
       <AlertDialog>
         <AlertDialogTrigger asChild>
@@ -181,7 +185,7 @@ const ChatDataManagementSection: React.FC<ChatDataManagementSectionProps> = ({ o
             <MessageSquareOff className="mr-2 h-4 w-4" /> Clear My Private Chats
           </Button>
         </AlertDialogTrigger>
-        <AlertDialogContent>
+        <AlertDialogContent className="shadow-lg border-border">
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>

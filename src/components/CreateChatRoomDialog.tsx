@@ -60,7 +60,7 @@ const CreateChatRoomDialog: React.FC<CreateChatRoomDialogProps> = ({ onChatRoomC
           <span className="sr-only">Create new chat room</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] shadow-lg border-border">
         <DialogHeader>
           <DialogTitle>Create New Chat Room</DialogTitle>
           <DialogDescription>

@@ -88,7 +88,7 @@ const ClearChatHistoryDialog: React.FC<ClearChatHistoryDialogProps> = ({ onHisto
           <Trash2 className="mr-2 h-4 w-4" /> Clear My Chat Data
         </Button>
       </AlertDialogTrigger>
-      <AlertDialogContent>
+      <AlertDialogContent className="shadow-lg border-border">
         <AlertDialogHeader>
           <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
           <AlertDialogDescription>

@@ -126,7 +126,7 @@ const StartPrivateChatDialog: React.FC<StartPrivateChatDialogProps> = ({ onChatS
           <span className="sr-only">Start private chat</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] shadow-lg border-border">
         <DialogHeader>
           <DialogTitle>Start Private Chat</DialogTitle>
           <DialogDescription>
