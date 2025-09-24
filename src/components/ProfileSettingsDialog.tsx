@@ -13,13 +13,14 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Settings, User, LogOut } from 'lucide-react'; // Added LogOut icon
+import { Settings, User, LogOut } from 'lucide-react';
 import { useSession } from '@/components/SessionContextProvider';
 import { showError, showSuccess } from '@/utils/toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import ChatDataManagementSection from './ChatDataManagementSection';
-import { ScrollArea } from '@/components/ui/scroll-area'; // Ensure ScrollArea is imported
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 
 interface ProfileSettingsDialogProps {
   onProfileUpdated: () => void;
@@ -35,6 +36,7 @@ const ProfileSettingsDialog: React.FC<ProfileSettingsDialogProps> = ({ onProfile
   const [isSaving, setIsSaving] = useState(false);
   const { supabase, session } = useSession();
   const currentUserId = session?.user?.id;
+  const navigate = useNavigate(); // Initialize useNavigate
 
   const fetchProfile = async () => {
     if (!currentUserId) return;
@@ -42,19 +44,18 @@ const ProfileSettingsDialog: React.FC<ProfileSettingsDialogProps> = ({ onProfile
     const { data, error } = await supabase
       .from('profiles')
       .select('first_name, last_name, username, avatar_url')
-      .eq('id', currentUserId); // Removed .single() to handle potential missing profiles gracefully
+      .eq('id', currentUserId);
 
     if (error) {
       showError("Failed to load profile: " + error.message);
       console.error("Error fetching profile:", error);
-    } else if (data && data.length > 0) { // Check if data exists and has elements
-      const profile = data[0]; // Take the first profile if multiple (shouldn't happen with PK)
+    } else if (data && data.length > 0) {
+      const profile = data[0];
       setFirstName(profile.first_name || '');
       setLastName(profile.last_name || '');
       setUsername(profile.username || '');
       setAvatarUrl(profile.avatar_url || '');
     } else {
-      // No profile found, initialize with empty strings
       setFirstName('');
       setLastName('');
       setUsername('');
@@ -98,7 +99,7 @@ const ProfileSettingsDialog: React.FC<ProfileSettingsDialogProps> = ({ onProfile
     } else {
       showSuccess("Profile updated successfully!");
       setOpen(false);
-      onProfileUpdated(); // Notify parent to refresh
+      onProfileUpdated();
     }
     setIsSaving(false);
   };
@@ -111,7 +112,8 @@ const ProfileSettingsDialog: React.FC<ProfileSettingsDialogProps> = ({ onProfile
     } else {
       showSuccess("You have been logged out successfully!");
       setOpen(false);
-      onProfileUpdated(); // Trigger a refresh, which should redirect to login
+      onProfileUpdated(); // Still call this for any parent component cleanup
+      navigate('/'); // Explicitly navigate to the home page
     }
   };
 
