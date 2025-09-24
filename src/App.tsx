@@ -8,12 +8,14 @@ import AuthLayout from "./components/layout/AuthLayout";
 import { Toaster } from "@/components/ui/sonner";
 import SessionContextProvider from "./components/SessionContextProvider";
 import ProtectedRoute from "./components/ProtectedRoute"; // Import ProtectedRoute
+import AuthOptionsPage from "./pages/AuthOptionsPage"; // Import AuthOptionsPage
 
 const App = () => (
   <BrowserRouter>
     <SessionContextProvider>
       <Routes>
         <Route path="/" element={<Index />} />
+        <Route path="/auth-options" element={<AuthOptionsPage />} /> {/* New route for auth options */}
         <Route
           path="/login"
           element={

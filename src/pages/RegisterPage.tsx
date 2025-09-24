@@ -16,9 +16,9 @@ const RegisterPage: React.FC = () => {
   }, [session, navigate]);
 
   return (
-    <Card className="w-full max-w-md mx-auto">
+    <Card className="w-full max-w-md mx-auto rounded-xl shadow-lg"> {/* Added rounded-xl and shadow-lg */}
       <CardHeader className="text-center">
-        <CardTitle className="text-2xl">Register</CardTitle>
+        <CardTitle className="text-2xl">Register for Prochat</CardTitle> {/* Updated title */}
       </CardHeader>
       <CardContent>
         <Auth
