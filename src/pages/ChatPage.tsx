@@ -26,8 +26,8 @@ interface Message {
 
 // Define the type for the private chat query result in ChatPage for notifications
 interface PrivateChatNotificationQueryResult {
-  user1: { id: string; username: string; first_name?: string } | null;
-  user2: { id: string; username: string; first_name?: string } | null;
+  user1: Array<{ id: string; username: string; first_name?: string }> | null; // Changed to array
+  user2: Array<{ id: string; username: string; first_name?: string }> | null; // Changed to array
 }
 
 const ChatPage: React.FC = () => {
@@ -227,7 +227,8 @@ const ChatPage: React.FC = () => {
 
             if (privateChatData) {
                 const privateChat = privateChatData as PrivateChatNotificationQueryResult; // Cast here
-                const otherUser = privateChat.user1?.id === currentUserId ? privateChat.user2 : privateChat.user1;
+                // Access the first element of the user arrays
+                const otherUser = privateChat.user1?.[0]?.id === currentUserId ? privateChat.user2?.[0] : privateChat.user1?.[0];
                 chatNameForNotification = otherUser?.first_name || otherUser?.username || 'a private chat';
             }
           }

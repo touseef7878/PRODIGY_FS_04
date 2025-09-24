@@ -35,8 +35,8 @@ interface PrivateChatQueryResult {
   user1_id: string;
   user2_id: string;
   private_messages: Array<{ content: string; created_at: string }> | null;
-  user1: SupabaseProfile | null; // Correctly defined as a single object
-  user2: SupabaseProfile | null; // Correctly defined as a single object
+  user1: SupabaseProfile[] | null; // Changed to array
+  user2: SupabaseProfile[] | null; // Changed to array
   user_chat_read_status: Array<{ last_read_at: string }> | null;
 }
 
@@ -146,9 +146,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onS
         user1:user1_id(id, username, first_name, last_name, avatar_url),
         user2:user2_id(id, username, first_name, last_name, avatar_url),
         user_chat_read_status!left(last_read_at)
-      `)
-      .or(`user1_id.eq.${currentUserId},user2_id.eq.${currentUserId}`)
-      .order('created_at', { ascending: false });
+      `); // Removed .select<PrivateChatQueryResult[]>() generic type
 
     if (privateError) {
       showError("Failed to load private chats: " + privateError.message);
@@ -158,9 +156,9 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onS
       const typedPrivateConvos = privateConvos as PrivateChatQueryResult[];
 
       const convosWithOtherUserAndUnread = (await Promise.all(typedPrivateConvos.map(async (convo) => {
-        // Directly access user1 and user2 as objects
-        const user1Profile = convo.user1;
-        const user2Profile = convo.user2;
+        // Access the first element of the user arrays
+        const user1Profile = convo.user1?.[0];
+        const user2Profile = convo.user2?.[0];
 
         if (!user1Profile || !user2Profile) {
           console.warn("Missing profile data for private chat:", convo.id, "User1 data:", convo.user1, "User2 data:", convo.user2);

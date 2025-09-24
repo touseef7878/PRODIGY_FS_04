@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Settings, User } from 'lucide-react';
+import { Settings, User, LogOut } from 'lucide-react'; // Added LogOut icon
 import { useSession } from '@/components/SessionContextProvider';
 import { showError, showSuccess } from '@/utils/toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -94,6 +94,18 @@ const ProfileSettingsDialog: React.FC<ProfileSettingsDialogProps> = ({ onProfile
       onProfileUpdated(); // Notify parent to refresh
     }
     setIsSaving(false);
+  };
+
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      showError("Failed to log out: " + error.message);
+      console.error("Error logging out:", error);
+    } else {
+      showSuccess("You have been logged out successfully!");
+      setOpen(false);
+      onProfileUpdated(); // Trigger a refresh, which should redirect to login
+    }
   };
 
   const defaultAvatar = `https://api.dicebear.com/7.x/lorelei/svg?seed=${username || 'user'}`;
@@ -187,6 +199,16 @@ const ProfileSettingsDialog: React.FC<ProfileSettingsDialogProps> = ({ onProfile
 
               {/* Chat Data Management Section */}
               <ChatDataManagementSection onChatDataCleared={onProfileUpdated} />
+
+              <Separator className="my-4" />
+
+              {/* Logout Section */}
+              <div className="space-y-2">
+                <h3 className="text-lg font-semibold">Account Actions</h3>
+                <Button variant="outline" className="w-full justify-start" onClick={handleLogout}>
+                  <LogOut className="mr-2 h-4 w-4" /> Logout
+                </Button>
+              </div>
             </div>
           </ScrollArea>
         )}
