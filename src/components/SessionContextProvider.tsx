@@ -28,25 +28,18 @@ const SessionContextProvider: React.FC<SessionContextProviderProps> = ({ childre
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    console.log("[SessionContextProvider] Initializing session check...");
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      setLoading(false);
-      console.log("[SessionContextProvider] Initial session data:", session);
-    }).catch(error => {
-      console.error("[SessionContextProvider] Error fetching initial session:", error);
       setLoading(false);
     });
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
+    } = supabase.auth.onAuthStateChange((_event, session) => { // Fixed: prefixed 'event' with '_'
       setSession(session);
-      console.log(`[SessionContextProvider] Auth state changed: Event=${event}, Session=`, session);
     });
 
     return () => {
-      console.log("[SessionContextProvider] Unsubscribing from auth state changes.");
       subscription.unsubscribe();
     };
   }, []);
