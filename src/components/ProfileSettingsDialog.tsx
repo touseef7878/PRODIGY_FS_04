@@ -18,8 +18,8 @@ import { useSession } from '@/components/SessionContextProvider';
 import { showError, showSuccess } from '@/utils/toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import ChatDataManagementSection from './ChatDataManagementSection';
+import { ScrollArea } from '@/components/ui/scroll-area'; // Ensure ScrollArea is imported
 
 interface ProfileSettingsDialogProps {
   onProfileUpdated: () => void;
@@ -42,17 +42,24 @@ const ProfileSettingsDialog: React.FC<ProfileSettingsDialogProps> = ({ onProfile
     const { data, error } = await supabase
       .from('profiles')
       .select('first_name, last_name, username, avatar_url')
-      .eq('id', currentUserId)
-      .single();
+      .eq('id', currentUserId); // Removed .single() to handle potential missing profiles gracefully
 
     if (error) {
       showError("Failed to load profile: " + error.message);
       console.error("Error fetching profile:", error);
-    } else if (data) {
-      setFirstName(data.first_name || '');
-      setLastName(data.last_name || '');
-      setUsername(data.username || '');
-      setAvatarUrl(data.avatar_url || '');
+    } else if (data && data.length > 0) { // Check if data exists and has elements
+      const profile = data[0]; // Take the first profile if multiple (shouldn't happen with PK)
+      setFirstName(profile.first_name || '');
+      setLastName(profile.last_name || '');
+      setUsername(profile.username || '');
+      setAvatarUrl(profile.avatar_url || '');
+    } else {
+      // No profile found, initialize with empty strings
+      setFirstName('');
+      setLastName('');
+      setUsername('');
+      setAvatarUrl('');
+      console.warn(`[ProfileSettingsDialog] No profile found for user ID: ${currentUserId}. Initializing with empty fields.`);
     }
     setLoading(false);
   };
