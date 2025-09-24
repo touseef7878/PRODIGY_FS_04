@@ -327,8 +327,8 @@ const ChatPage: React.FC = () => {
         />
       }
     >
-      <div className="flex h-full flex-col">
-        <div className="flex items-center h-16 border-b px-4">
+      <div className="flex h-full flex-col bg-background text-foreground">
+        <div className="flex items-center h-16 border-b border-border px-4 bg-card shadow-sm">
           {selectedChatName ? (
             <h2 className="text-xl font-semibold">
               {selectedChatType === 'public' ? `Chat Room: ${selectedChatName}` : `Private Chat with ${selectedChatName}`}
@@ -349,8 +349,8 @@ const ChatPage: React.FC = () => {
             <MessageInput onSendMessage={handleSendMessage} />
           </>
         ) : (
-          <div className="flex-1 flex items-center justify-center text-muted-foreground">
-            <p>Start by selecting a chat from the sidebar or create a new one.</p>
+          <div className="flex-1 flex items-center justify-center text-muted-foreground p-4">
+            <p className="text-center">Start by selecting a chat from the sidebar or create a new one.</p>
           </div>
         )}
         <MadeWithDyad />

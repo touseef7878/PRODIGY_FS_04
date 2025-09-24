@@ -4,7 +4,6 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
-import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -28,11 +27,10 @@ const ChatLayout: React.FC<ChatLayoutProps> = ({
 
   if (isMobile) {
     return (
-      <div className="flex h-screen flex-col">
-        <div className="flex-none">
+      <div className="flex h-screen flex-col bg-background text-foreground">
+        <div className="flex-none border-b border-border">
           {sidebar}
         </div>
-        <Separator />
         <div className="flex-1 overflow-hidden">
           {children}
         </div>
@@ -48,7 +46,7 @@ const ChatLayout: React.FC<ChatLayoutProps> = ({
           sizes,
         )}`;
       }}
-      className="h-screen max-h-screen items-stretch"
+      className="h-screen max-h-screen items-stretch bg-background text-foreground"
     >
       <ResizablePanel
         defaultSize={defaultLayout[0]}
@@ -65,6 +63,7 @@ const ChatLayout: React.FC<ChatLayoutProps> = ({
           document.cookie = `react-resizable-panels:collapsed=${false}`;
         }}
         className={cn(
+          "bg-card border-r border-border", // Apply card background and border
           isCollapsed &&
             "min-w-[50px] transition-all duration-300 ease-in-out",
         )}

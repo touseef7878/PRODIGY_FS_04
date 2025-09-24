@@ -34,7 +34,7 @@ const MessageList: React.FC<MessageListProps> = ({ messages, currentUserId }) =>
   }, [messages]);
 
   return (
-    <ScrollArea className="flex-1 p-4">
+    <ScrollArea className="flex-1 p-4 bg-background">
       <div className="space-y-4">
         {messages.map((message) => {
           const isCurrentUser = message.sender_id === currentUserId;
@@ -58,13 +58,13 @@ const MessageList: React.FC<MessageListProps> = ({ messages, currentUserId }) =>
               )}
               <div
                 className={cn(
-                  "max-w-[70%] rounded-lg p-3 text-sm",
+                  "max-w-[70%] rounded-xl p-3 text-sm shadow-md", // Rounded corners and shadow
                   isCurrentUser
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-muted-foreground"
+                    ? "bg-primary text-primary-foreground rounded-br-none" // Current user messages
+                    : "bg-muted text-muted-foreground rounded-bl-none" // Other user messages
                 )}
               >
-                <p className="font-medium text-xs mb-1">{senderName}</p>
+                <p className="font-medium text-xs mb-1 opacity-80">{senderName}</p>
                 <p>{message.content}</p>
               </div>
               {isCurrentUser && (
