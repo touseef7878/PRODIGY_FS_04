@@ -10,7 +10,6 @@ const LoginPage: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    console.log("[LoginPage] Current session:", session); // Add this line
     if (session) {
       navigate('/'); // Redirect to home if already logged in
     }
