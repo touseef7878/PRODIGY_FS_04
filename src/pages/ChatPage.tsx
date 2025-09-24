@@ -24,6 +24,12 @@ interface Message {
   }> | null;
 }
 
+// Define the type for the private chat query result in ChatPage for notifications
+interface PrivateChatNotificationQueryResult {
+  user1: { id: string; username: string; first_name?: string } | null;
+  user2: { id: string; username: string; first_name?: string } | null;
+}
+
 const ChatPage: React.FC = () => {
   const { supabase, session } = useSession();
   const [selectedChatId, setSelectedChatId] = useState<string | undefined>(undefined);
@@ -210,17 +216,18 @@ const ChatPage: React.FC = () => {
               chatNameForNotification = chatRoom.name;
             }
           } else { // private chat
-            const { data: privateChat } = await supabase
+            const { data: privateChatData } = await supabase
               .from('private_chats')
               .select(`
                 user1:user1_id(id, username, first_name),
-                user2:user2_2id(id, username, first_name)
+                user2:user2_id(id, username, first_name)
               `)
               .eq('id', incomingChatId)
               .single();
 
-            if (privateChat) {
-                const otherUser = privateChat.user1?.[0]?.id === currentUserId ? privateChat.user2?.[0] : privateChat.user1?.[0];
+            if (privateChatData) {
+                const privateChat = privateChatData as PrivateChatNotificationQueryResult; // Cast here
+                const otherUser = privateChat.user1?.id === currentUserId ? privateChat.user2 : privateChat.user1;
                 chatNameForNotification = otherUser?.first_name || otherUser?.username || 'a private chat';
             }
           }

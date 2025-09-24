@@ -29,13 +29,15 @@ interface SupabaseProfile {
   avatar_url?: string;
 }
 
-interface RawPrivateChatData {
+// Define the exact type for the data returned by the private chats select query
+interface PrivateChatQueryResult {
   id: string;
   user1_id: string;
   user2_id: string;
   private_messages: Array<{ content: string; created_at: string }> | null;
-  user1: SupabaseProfile[] | null;
-  user2: SupabaseProfile[] | null;
+  user1: SupabaseProfile | null; // Correctly defined as a single object
+  user2: SupabaseProfile | null; // Correctly defined as a single object
+  user_chat_read_status: Array<{ last_read_at: string }> | null;
 }
 
 interface PrivateChat {
@@ -51,7 +53,6 @@ interface SidebarProps {
   selectedChatId?: string;
   selectedChatType?: 'public' | 'private';
   onSelectChat: (chatId: string, chatName: string, chatType: 'public' | 'private') => void;
-  // Removed onChatsUpdated as it's no longer used directly in Sidebar
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onSelectChat }) => {
@@ -153,14 +154,16 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onS
       showError("Failed to load private chats: " + privateError.message);
       console.error("Error fetching private chats:", privateError);
     } else {
-      const typedPrivateConvos = privateConvos as (RawPrivateChatData & { user_chat_read_status: Array<{ last_read_at: string }> | null })[];
+      // Explicitly cast the data here to the defined interface
+      const typedPrivateConvos = privateConvos as PrivateChatQueryResult[];
 
       const convosWithOtherUserAndUnread = (await Promise.all(typedPrivateConvos.map(async (convo) => {
-        const user1Profile = convo.user1?.[0];
-        const user2Profile = convo.user2?.[0];
+        // Directly access user1 and user2 as objects
+        const user1Profile = convo.user1;
+        const user2Profile = convo.user2;
 
         if (!user1Profile || !user2Profile) {
-          console.warn("Missing profile data for private chat:", convo.id, "User1 array:", convo.user1, "User2 array:", convo.user2);
+          console.warn("Missing profile data for private chat:", convo.id, "User1 data:", convo.user1, "User2 data:", convo.user2);
           return null;
         }
 
