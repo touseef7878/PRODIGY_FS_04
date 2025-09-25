@@ -29,14 +29,13 @@ const LoginPage: React.FC = () => {
             variables: {
               default: {
                 colors: {
-                  brand: `hsl(var(--primary))`,
-                  brandAccent: `hsl(var(--primary-foreground))`,
-                  // Add more specific overrides for better control
+                  brand: `hsl(var(--primary))`, // Main button background and link color
+                  brandAccent: `hsl(var(--primary-foreground))`, // Main button text color
                   defaultButtonBackground: `hsl(var(--primary))`,
                   defaultButtonBackgroundHover: `hsl(var(--primary) / 0.9)`,
-                  defaultButtonBorder: `hsl(var(--border))`,
+                  defaultButtonBorder: `hsl(var(--primary))`, // Use primary for button border
                   defaultButtonText: `hsl(var(--primary-foreground))`,
-                  inputBackground: `hsl(var(--input))`,
+                  inputBackground: `hsl(var(--background))`, // Use background for input fields
                   inputBorder: `hsl(var(--border))`,
                   inputBorderHover: `hsl(var(--ring))`,
                   inputBorderFocus: `hsl(var(--ring))`,
