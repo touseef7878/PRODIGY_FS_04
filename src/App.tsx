@@ -7,42 +7,45 @@ import NotFound from "./pages/NotFound";
 import AuthLayout from "./components/layout/AuthLayout";
 import { Toaster } from "@/components/ui/sonner";
 import SessionContextProvider from "./components/SessionContextProvider";
-import ProtectedRoute from "./components/ProtectedRoute"; // Import ProtectedRoute
+import ProtectedRoute from "./components/ProtectedRoute";
+import { ThemeProvider } from "@/components/theme-provider"; // Import ThemeProvider
 
 const App = () => (
   <BrowserRouter>
-    <SessionContextProvider>
-      <Routes>
-        <Route path="/" element={<Index />} />
-        <Route
-          path="/login"
-          element={
-            <AuthLayout>
-              <LoginPage />
-            </AuthLayout>
-          }
-        />
-        <Route
-          path="/register"
-          element={
-            <AuthLayout>
-              <RegisterPage />
-            </AuthLayout>
-          }
-        />
-        {/* Protect the /chat route */}
-        <Route
-          path="/chat"
-          element={
-            <ProtectedRoute>
-              <ChatPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-      <Toaster />
-    </SessionContextProvider>
+    <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
+      <SessionContextProvider>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route
+            path="/login"
+            element={
+              <AuthLayout>
+                <LoginPage />
+              </AuthLayout>
+            }
+          />
+          <Route
+            path="/register"
+            element={
+              <AuthLayout>
+                <RegisterPage />
+              </AuthLayout>
+            }
+          />
+          {/* Protect the /chat route */}
+          <Route
+            path="/chat"
+            element={
+              <ProtectedRoute>
+                <ChatPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+        <Toaster />
+      </SessionContextProvider>
+    </ThemeProvider>
   </BrowserRouter>
 );
 

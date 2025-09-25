@@ -13,14 +13,16 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Settings, User, LogOut } from 'lucide-react';
+import { Settings, User, LogOut, Sun, Moon } from 'lucide-react'; // Added Sun and Moon icons
 import { useSession } from '@/components/SessionContextProvider';
 import { showError, showSuccess } from '@/utils/toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import ChatDataManagementSection from './ChatDataManagementSection';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import { useNavigate } from 'react-router-dom';
+import { Switch } from "@/components/ui/switch"; // Import Switch
+import { useTheme } from "next-themes"; // Import useTheme
 
 interface ProfileSettingsDialogProps {
   onProfileUpdated: () => void;
@@ -36,7 +38,8 @@ const ProfileSettingsDialog: React.FC<ProfileSettingsDialogProps> = ({ onProfile
   const [isSaving, setIsSaving] = useState(false);
   const { supabase, session } = useSession();
   const currentUserId = session?.user?.id;
-  const navigate = useNavigate(); // Initialize useNavigate
+  const navigate = useNavigate();
+  const { theme, setTheme } = useTheme(); // Use the theme hook
 
   const fetchProfile = async () => {
     if (!currentUserId) return;
@@ -202,6 +205,24 @@ const ProfileSettingsDialog: React.FC<ProfileSettingsDialogProps> = ({ onProfile
                     {isSaving ? 'Saving...' : 'Save changes'}
                   </Button>
                 </DialogFooter>
+              </div>
+
+              <Separator className="my-4" />
+
+              {/* Display Settings Section */}
+              <div className="space-y-2">
+                <h3 className="text-lg font-semibold">Display Settings</h3>
+                <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm">
+                  <div className="flex items-center space-x-2">
+                    {theme === 'dark' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+                    <Label htmlFor="dark-mode-switch">Dark Mode</Label>
+                  </div>
+                  <Switch
+                    id="dark-mode-switch"
+                    checked={theme === 'dark'}
+                    onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
+                  />
+                </div>
               </div>
 
               <Separator className="my-4" />
