@@ -55,7 +55,7 @@ const CreateChatRoomDialog: React.FC<CreateChatRoomDialogProps> = ({ onChatRoomC
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="icon" className="ml-auto">
+        <Button variant="secondary" size="icon" className="ml-auto">
           <PlusCircle className="h-5 w-5" />
           <span className="sr-only">Create new chat room</span>
         </Button>

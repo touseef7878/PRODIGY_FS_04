@@ -276,7 +276,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onS
 
   return (
     <div className="flex h-full max-h-screen flex-col bg-card text-foreground">
-      <div className="flex items-center justify-between p-4 border-b border-border">
+      <div className="flex items-center justify-between p-4 border-b border-border bg-primary text-primary-foreground shadow-md">
         <h2 className="text-xl font-semibold">Chats</h2>
         <div className="flex items-center space-x-2">
           <CreateChatRoomDialog onChatRoomCreated={fetchChats} />

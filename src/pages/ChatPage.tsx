@@ -328,13 +328,13 @@ const ChatPage: React.FC = () => {
       }
     >
       <div className="flex h-full flex-col bg-background text-foreground">
-        <div className="flex items-center h-16 border-b border-border px-4 bg-card shadow-sm">
+        <div className="flex items-center h-16 border-b border-border px-4 bg-primary text-primary-foreground shadow-md">
           {selectedChatName ? (
             <h2 className="text-xl font-semibold">
               {selectedChatType === 'public' ? `Chat Room: ${selectedChatName}` : `Private Chat with ${selectedChatName}`}
             </h2>
           ) : (
-            <h2 className="text-xl font-semibold text-muted-foreground">Select a chat</h2>
+            <h2 className="text-xl font-semibold text-primary-foreground/80">Select a chat</h2>
           )}
         </div>
         {selectedChatId && selectedChatType ? (
