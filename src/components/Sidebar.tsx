@@ -301,8 +301,8 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onS
                     <div
                       key={`public-${chat.id}`}
                       className={cn(
-                        "flex items-center gap-3 rounded-lg p-3 text-left text-sm transition-all hover:bg-accent cursor-pointer",
-                        selectedChatId === chat.id && selectedChatType === 'public' && "bg-primary text-primary-foreground hover:bg-primary/90",
+                        "flex items-center gap-3 rounded-lg p-3 text-left text-sm transition-all hover:bg-accent cursor-pointer border border-transparent", // Added border-transparent
+                        selectedChatId === chat.id && selectedChatType === 'public' && "bg-primary text-primary-foreground hover:bg-primary/90 border-primary", // Added border-primary
                       )}
                       onClick={() => onSelectChat(chat.id, chat.name, 'public')}
                     >
@@ -337,8 +337,8 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onS
                     <div
                       key={`private-${chat.id}`}
                       className={cn(
-                        "flex items-center gap-3 rounded-lg p-3 text-left text-sm transition-all hover:bg-accent cursor-pointer",
-                        selectedChatId === chat.id && selectedChatType === 'private' && "bg-primary text-primary-foreground hover:bg-primary/90",
+                        "flex items-center gap-3 rounded-lg p-3 text-left text-sm transition-all hover:bg-accent cursor-pointer border border-transparent", // Added border-transparent
+                        selectedChatId === chat.id && selectedChatType === 'private' && "bg-primary text-primary-foreground hover:bg-primary/90 border-primary", // Added border-primary
                       )}
                       onClick={() => onSelectChat(chat.id, chat.other_user_profile.username, 'private')}
                     >
