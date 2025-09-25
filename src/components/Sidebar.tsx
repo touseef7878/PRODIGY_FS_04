@@ -276,7 +276,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onS
 
   return (
     <div className="flex h-full max-h-screen flex-col bg-card text-foreground">
-      <div className="flex items-center justify-between p-4 border-b border-border bg-primary text-primary-foreground shadow-md">
+      <div className="flex items-center justify-between p-4 border-b border-border">
         <h2 className="text-xl font-semibold">Chats</h2>
         <div className="flex items-center space-x-2">
           <CreateChatRoomDialog onChatRoomCreated={fetchChats} />
@@ -301,8 +301,8 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onS
                     <div
                       key={`public-${chat.id}`}
                       className={cn(
-                        "flex items-center gap-3 rounded-lg p-3 text-left text-sm transition-all hover:bg-accent cursor-pointer border border-transparent", // Added border-transparent
-                        selectedChatId === chat.id && selectedChatType === 'public' && "bg-primary text-primary-foreground hover:bg-primary/90 border-primary", // Added border-primary
+                        "flex items-center gap-3 rounded-lg p-3 text-left text-sm transition-all hover:bg-accent cursor-pointer",
+                        selectedChatId === chat.id && selectedChatType === 'public' && "bg-muted",
                       )}
                       onClick={() => onSelectChat(chat.id, chat.name, 'public')}
                     >
@@ -337,8 +337,8 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onS
                     <div
                       key={`private-${chat.id}`}
                       className={cn(
-                        "flex items-center gap-3 rounded-lg p-3 text-left text-sm transition-all hover:bg-accent cursor-pointer border border-transparent", // Added border-transparent
-                        selectedChatId === chat.id && selectedChatType === 'private' && "bg-primary text-primary-foreground hover:bg-primary/90 border-primary", // Added border-primary
+                        "flex items-center gap-3 rounded-lg p-3 text-left text-sm transition-all hover:bg-accent cursor-pointer",
+                        selectedChatId === chat.id && selectedChatType === 'private' && "bg-muted",
                       )}
                       onClick={() => onSelectChat(chat.id, chat.other_user_profile.username, 'private')}
                     >

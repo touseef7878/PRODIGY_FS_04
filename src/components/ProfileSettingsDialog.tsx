@@ -122,7 +122,7 @@ const ProfileSettingsDialog: React.FC<ProfileSettingsDialogProps> = ({ onProfile
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="secondary" size="icon" className="ml-2">
+        <Button variant="ghost" size="icon" className="ml-2">
           <Settings className="h-5 w-5" />
           <span className="sr-only">Profile Settings</span>
         </Button>

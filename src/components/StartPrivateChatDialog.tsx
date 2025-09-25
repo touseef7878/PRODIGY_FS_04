@@ -121,7 +121,7 @@ const StartPrivateChatDialog: React.FC<StartPrivateChatDialogProps> = ({ onChatS
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="secondary" size="icon" className="ml-2">
+        <Button variant="ghost" size="icon" className="ml-2">
           <MessageSquare className="h-5 w-5" />
           <span className="sr-only">Start private chat</span>
         </Button>
