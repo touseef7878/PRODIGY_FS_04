@@ -77,8 +77,8 @@ All tables have Row Level Security (RLS) policies for data protection and privac
 
 1. **Clone the repository:**
 ```bash
-git clone https://github.com/yourusername/emerald-lobster-snap.git
-cd emerald-lobster-snap
+git clone https://github.com/touseef7878/PRODIGY_FS_04.git
+cd PRODIGY_FS_04
 ```
 
 2. **Install dependencies:**
