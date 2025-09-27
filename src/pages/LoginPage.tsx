@@ -16,7 +16,7 @@ const LoginPage: React.FC = () => {
   }, [session, navigate]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center welcome-bg p-4">
+    <div className="min-h-screen flex items-center justify-center auth-page p-4">
       <div className="form-card w-full max-w-md mx-auto">
         <div className="text-center mb-6">
           <h2 className="text-2xl font-bold text-foreground">Login</h2>
@@ -35,7 +35,7 @@ const LoginPage: React.FC = () => {
                   defaultButtonBackgroundHover: `hsl(170 80% 30%)`, // Slightly darker teal on hover
                   defaultButtonBorder: `hsl(170 80% 40%)`,
                   defaultButtonText: `hsl(0 0% 100%)`,
-                  inputBackground: `hsl(var(--background))`, // Use theme background
+                  inputBackground: `hsl(var(--card))`, // Use card background
                   inputBorder: `hsl(var(--border))`, // Use theme border
                   inputBorderHover: `hsl(var(--accent-primary))`, // Use theme accent on hover
                   inputBorderFocus: `hsl(var(--accent-primary))`, // Use theme accent on focus

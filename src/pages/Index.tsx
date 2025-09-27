@@ -22,7 +22,7 @@ const Index: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center welcome-bg text-white p-4 relative overflow-hidden">
+    <div className="min-h-screen flex flex-col items-center justify-center auth-page text-white p-4 relative overflow-hidden">
       {/* Background elements for aesthetic */}
       <div className="absolute inset-0 z-0 opacity-30">
         <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-white rounded-full mix-blend-overlay filter blur-3xl animate-blob"></div>

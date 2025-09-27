@@ -316,48 +316,50 @@ const ChatPage: React.FC = () => {
   console.log("[ChatPage] Rendered. Current messages state:", messages);
 
   return (
-    <ChatLayout
-      sidebar={
-        <Sidebar
-          key={sidebarRefreshKey} // Use key to force re-render and re-fetch chats
-          selectedChatId={selectedChatId}
-          selectedChatType={selectedChatType}
-          onSelectChat={handleSelectChat}
-          // Removed onChatsUpdated prop as it's no longer expected by Sidebar
-        />
-      }
-    >
-      <div className="flex h-full flex-col bg-background text-foreground">
-        <div className="flex items-center h-16 border-b border-border px-4">
-          {selectedChatName ? (
-            <h2 className="text-xl font-semibold">
-              {selectedChatType === 'public' ? `Chat Room: ${selectedChatName}` : `Private Chat with ${selectedChatName}`}
-            </h2>
-          ) : (
-            <h2 className="text-xl font-semibold text-muted-foreground">Select a chat</h2>
-          )}
-        </div>
-        {selectedChatId && selectedChatType ? (
-          <>
-            {loadingMessages ? (
-              <div className="flex-1 flex items-center justify-center text-muted-foreground">
-                <p>Loading messages...</p>
-              </div>
+    <div className="h-screen flex flex-col bg-background text-foreground">
+      <ChatLayout
+        sidebar={
+          <Sidebar
+            key={sidebarRefreshKey} // Use key to force re-render and re-fetch chats
+            selectedChatId={selectedChatId}
+            selectedChatType={selectedChatType}
+            onSelectChat={handleSelectChat}
+            // Removed onChatsUpdated prop as it's no longer expected by Sidebar
+          />
+        }
+      >
+        <div className="flex h-full flex-col">
+          <div className="flex items-center h-16 border-b border-border px-4">
+            {selectedChatName ? (
+              <h2 className="text-xl font-semibold">
+                {selectedChatType === 'public' ? `Chat Room: ${selectedChatName}` : `Private Chat with ${selectedChatName}`}
+              </h2>
             ) : (
-              <MessageList key={selectedChatId} messages={messages} currentUserId={currentUserId} />
+              <h2 className="text-xl font-semibold text-muted-foreground">Select a chat</h2>
             )}
-            <MessageInput onSendMessage={handleSendMessage} />
-          </>
-        ) : (
-          <div className="flex-1 flex items-center justify-center text-muted-foreground p-4">
-            <p className="text-center">Start by selecting a chat from the sidebar or create a new one.</p>
           </div>
-        )}
-        <div className="footer mt-auto">
-          Made with ❤️ by Touseef
+          {selectedChatId && selectedChatType ? (
+            <>
+              {loadingMessages ? (
+                <div className="flex-1 flex items-center justify-center text-muted-foreground">
+                  <p>Loading messages...</p>
+                </div>
+              ) : (
+                <MessageList key={selectedChatId} messages={messages} currentUserId={currentUserId} />
+              )}
+              <MessageInput onSendMessage={handleSendMessage} />
+            </>
+          ) : (
+            <div className="flex-1 flex items-center justify-center text-muted-foreground p-4">
+              <p className="text-center">Start by selecting a chat from the sidebar or create a new one.</p>
+            </div>
+          )}
+          <div className="footer">
+            Made with ❤️ by Touseef
+          </div>
         </div>
-      </div>
-    </ChatLayout>
+      </ChatLayout>
+    </div>
   );
 };
 

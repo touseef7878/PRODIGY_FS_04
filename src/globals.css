@@ -110,18 +110,31 @@
   }
 }
 
-/* Gradient backgrounds for welcome page */
-.welcome-bg {
-  background: linear-gradient(135deg, 
-    hsl(var(--primary-gradient-start)), 
-    hsl(var(--primary-gradient-end)));
-}
-
 /* Custom styles for Prochat - Task 4 for Prodigy Infotec */
 /* Built by Touseef */
 body {
   font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  min-height: 100vh;
   transition: background-color 0.3s ease;
+}
+
+/* Gradient backgrounds only for auth pages */
+.auth-page {
+  background: linear-gradient(135deg, 
+    hsl(var(--primary-gradient-start)), 
+    hsl(var(--primary-gradient-end)));
+  min-height: 100vh;
+}
+
+.dark .auth-page {
+  background: linear-gradient(135deg, 
+    hsl(250 30% 15%), 
+    hsl(280 25% 15%));
+}
+
+/* Set default background for all other pages */
+body:not(.auth-page) {
+  background: hsl(var(--background));
 }
 
 /* Teal/green accent button styles */
