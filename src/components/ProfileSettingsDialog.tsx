@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -41,7 +41,7 @@ const ProfileSettingsDialog: React.FC<ProfileSettingsDialogProps> = ({ onProfile
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme(); // Use the theme hook
 
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
     if (!currentUserId) return;
     setLoading(true);
     const { data, error } = await supabase
@@ -66,13 +66,13 @@ const ProfileSettingsDialog: React.FC<ProfileSettingsDialogProps> = ({ onProfile
       console.warn(`[ProfileSettingsDialog] No profile found for user ID: ${currentUserId}. Initializing with empty fields.`);
     }
     setLoading(false);
-  };
+  }, [currentUserId, supabase]);
 
   useEffect(() => {
     if (open) {
       fetchProfile();
     }
-  }, [open, currentUserId]);
+  }, [open, fetchProfile]);
 
   const handleSave = async () => {
     if (!currentUserId) {

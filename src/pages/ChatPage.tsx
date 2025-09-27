@@ -117,7 +117,7 @@ const ChatPage: React.FC = () => {
     markChatAsRead(chatId, chatType); // Mark as read when selected
   }, [markChatAsRead]);
 
-  const fetchMessages = async (chatId: string, chatType: 'public' | 'private') => {
+  const fetchMessages = useCallback(async (chatId: string, chatType: 'public' | 'private') => {
     setLoadingMessages(true);
     let data, error;
 
@@ -168,14 +168,14 @@ const ChatPage: React.FC = () => {
       console.log(`[ChatPage] Fetched initial messages for ${chatType} chat ${chatId}:`, data);
     }
     setLoadingMessages(false);
-  };
+  }, [supabase]);
 
   useEffect(() => {
     console.log(`[ChatPage] Effect running. Selected Chat ID: ${selectedChatId}, Type: ${selectedChatType}`);
     if (selectedChatId && selectedChatType) {
       fetchMessages(selectedChatId, selectedChatType);
 
-      const handleNewMessage = async (payload: any, type: 'public' | 'private') => {
+      const handleNewMessage = async (payload: { new: Message }, type: 'public' | 'private') => {
         const incomingMessage = payload.new as Message;
         const incomingChatId = type === 'public' ? incomingMessage.chat_room_id : incomingMessage.private_chat_id;
 
@@ -276,7 +276,7 @@ const ChatPage: React.FC = () => {
     } else {
       console.log("[ChatPage] No chat selected, skipping subscription setup.");
     }
-  }, [selectedChatId, selectedChatType, supabase, currentUserId, handleSelectChat, markChatAsRead]);
+  }, [selectedChatId, selectedChatType, supabase, currentUserId, handleSelectChat, markChatAsRead, fetchMessages]);
 
   const handleSendMessage = async (content: string) => {
     if (!selectedChatId || !currentUserId || !selectedChatType) {

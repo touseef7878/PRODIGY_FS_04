@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
@@ -61,7 +61,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onS
   const [loading, setLoading] = useState(true);
   const currentUserId = session?.user?.id;
 
-  const fetchChats = async () => {
+  const fetchChats = useCallback(async () => {
     setLoading(true);
     if (!currentUserId) {
       setLoading(false);
@@ -213,7 +213,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onS
     }
 
     setLoading(false);
-  };
+  }, [currentUserId, supabase]);
 
   useEffect(() => {
     if (session) {
@@ -251,7 +251,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onS
       // Also listen for changes in user_chat_read_status to update unread counts
       const readStatusChannel = supabase
         .channel('public:user_chat_read_status')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'user_chat_read_status', filter: `user_id=eq.${currentUserId}` }, _payload => {
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'user_chat_read_status', filter: `user_id=eq.${session.user.id}` }, _payload => {
           fetchChats();
         })
         .subscribe();
@@ -264,7 +264,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onS
         supabase.removeChannel(readStatusChannel);
       };
     }
-  }, [session, currentUserId]);
+  }, [session, fetchChats, supabase]);
 
   if (loading) {
     return (

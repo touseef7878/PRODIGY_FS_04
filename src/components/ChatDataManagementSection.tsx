@@ -48,9 +48,14 @@ const ChatDataManagementSection: React.FC<ChatDataManagementSectionProps> = ({ o
       if (error) throw error;
       showSuccess("All public chat rooms you created, and their messages, have been cleared!");
       onChatDataCleared(); // Refresh sidebar and chat view
-    } catch (error: any) {
-      showError("Failed to clear public chat rooms: " + error.message);
-      console.error("Error clearing public chat rooms:", error);
+    } catch (error) {
+      if (error instanceof Error) {
+        showError("Failed to clear public chat rooms: " + error.message);
+        console.error("Error clearing public chat rooms:", error);
+      } else {
+        showError("An unknown error occurred while clearing public chat rooms.");
+        console.error("Unknown error clearing public chat rooms:", error);
+      }
     } finally {
       setIsClearingPublicRooms(false);
     }
@@ -74,9 +79,14 @@ const ChatDataManagementSection: React.FC<ChatDataManagementSectionProps> = ({ o
       if (error) throw error;
       showSuccess("All private chats you are involved in, and their messages, have been cleared!");
       onChatDataCleared(); // Refresh sidebar and chat view
-    } catch (error: any) {
-      showError("Failed to clear private chats: " + error.message);
-      console.error("Error clearing private chats:", error);
+    } catch (error) {
+      if (error instanceof Error) {
+        showError("Failed to clear private chats: " + error.message);
+        console.error("Error clearing private chats:", error);
+      } else {
+        showError("An unknown error occurred while clearing private chats.");
+        console.error("Unknown error clearing private chats:", error);
+      }
     } finally {
       setIsClearingPrivateChats(false);
     }
@@ -110,9 +120,14 @@ const ChatDataManagementSection: React.FC<ChatDataManagementSectionProps> = ({ o
 
       showSuccess("All your messages have been marked as read!");
       onChatDataCleared(); // Refresh sidebar to update unread counts
-    } catch (error: any) {
-      showError("Failed to mark all messages as read: " + error.message);
-      console.error("Error marking all messages as read:", error);
+    } catch (error) {
+      if (error instanceof Error) {
+        showError("Failed to mark all messages as read: " + error.message);
+        console.error("Error marking all messages as read:", error);
+      } else {
+        showError("An unknown error occurred while marking messages as read.");
+        console.error("Unknown error marking messages as read:", error);
+      }
     } finally {
       setIsMarkingRead(false);
     }

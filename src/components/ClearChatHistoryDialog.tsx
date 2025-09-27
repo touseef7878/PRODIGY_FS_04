@@ -73,9 +73,14 @@ const ClearChatHistoryDialog: React.FC<ClearChatHistoryDialogProps> = ({ onHisto
       showSuccess("Your chat history has been cleared successfully!");
       setOpen(false);
       onHistoryCleared(); // Notify parent to refresh
-    } catch (error: any) {
-      showError("Failed to clear chat history: " + error.message);
-      console.error("Error clearing chat history:", error);
+    } catch (error) {
+      if (error instanceof Error) {
+        showError("Failed to clear chat history: " + error.message);
+        console.error("Error clearing chat history:", error);
+      } else {
+        showError("An unknown error occurred while clearing history.");
+        console.error("An unknown error occurred:", error);
+      }
     } finally {
       setIsClearing(false);
     }
