@@ -1,10 +1,11 @@
 #root {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 0;
   text-align: center;
 }
 
+/* This is from the default Vite template - keeping it for now but might remove later */
 .logo {
   height: 6em;
   padding: 1.5em;

@@ -275,8 +275,8 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onS
   }
 
   return (
-    <div className="flex h-full max-h-screen flex-col bg-card text-foreground">
-      <div className="flex items-center justify-between p-4 border-b border-border">
+    <div className="flex h-full max-h-screen flex-col bg-sidebar-background text-foreground">
+      <div className="flex items-center justify-between p-4 border-b border-sidebar-border">
         <h2 className="text-xl font-semibold">Chats</h2>
         <div className="flex items-center space-x-2">
           <CreateChatRoomDialog onChatRoomCreated={fetchChats} />
@@ -302,7 +302,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onS
                       key={`public-${chat.id}`}
                       className={cn(
                         "flex items-center gap-3 rounded-lg p-3 text-left text-sm transition-all hover:bg-accent cursor-pointer",
-                        selectedChatId === chat.id && selectedChatType === 'public' && "bg-muted",
+                        selectedChatId === chat.id && selectedChatType === 'public' && "sidebar-active",
                       )}
                       onClick={() => onSelectChat(chat.id, chat.name, 'public')}
                     >
@@ -338,7 +338,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onS
                       key={`private-${chat.id}`}
                       className={cn(
                         "flex items-center gap-3 rounded-lg p-3 text-left text-sm transition-all hover:bg-accent cursor-pointer",
-                        selectedChatId === chat.id && selectedChatType === 'private' && "bg-muted",
+                        selectedChatId === chat.id && selectedChatType === 'private' && "sidebar-active",
                       )}
                       onClick={() => onSelectChat(chat.id, chat.other_user_profile.username, 'private')}
                     >

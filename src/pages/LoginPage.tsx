@@ -16,11 +16,11 @@ const LoginPage: React.FC = () => {
   }, [session, navigate]);
 
   return (
-    <Card className="w-full max-w-md mx-auto shadow-lg border-border">
-      <CardHeader className="text-center">
-        <CardTitle className="text-2xl text-foreground">Login</CardTitle>
-      </CardHeader>
-      <CardContent>
+    <div className="min-h-screen flex items-center justify-center welcome-bg p-4">
+      <div className="form-card w-full max-w-md mx-auto">
+        <div className="text-center mb-6">
+          <h2 className="text-2xl font-bold text-foreground">Login</h2>
+        </div>
         <Auth
           supabaseClient={supabase}
           providers={[]} // No third-party providers for now
@@ -29,19 +29,24 @@ const LoginPage: React.FC = () => {
             variables: {
               default: {
                 colors: {
-                  brand: `hsl(217 91% 59%)`, // A vibrant blue for main buttons
+                  brand: `hsl(170 80% 40%)`, // Teal/green accent
                   brandAccent: `hsl(0 0% 100%)`, // White text on brand buttons
-                  defaultButtonBackground: `hsl(217 91% 59%)`,
-                  defaultButtonBackgroundHover: `hsl(217 91% 49%)`, // Slightly darker blue on hover
-                  defaultButtonBorder: `hsl(217 91% 59%)`,
+                  defaultButtonBackground: `hsl(170 80% 40%)`,
+                  defaultButtonBackgroundHover: `hsl(170 80% 30%)`, // Slightly darker teal on hover
+                  defaultButtonBorder: `hsl(170 80% 40%)`,
                   defaultButtonText: `hsl(0 0% 100%)`,
-                  inputBackground: `hsl(0 0% 100%)`, // White input background
-                  inputBorder: `hsl(214.3 31.8% 91.4%)`, // Light gray border
-                  inputBorderHover: `hsl(222.2 84% 4.9%)`, // Darker border on hover
-                  inputBorderFocus: `hsl(222.2 84% 4.9%)`, // Darker border on focus
-                  inputText: `hsl(222.2 47.4% 11.2%)`, // Dark text
-                  anchorTextColor: `hsl(217 91% 59%)`, // Vibrant blue for links
-                  anchorTextHoverColor: `hsl(217 91% 49%)`, // Slightly darker blue on link hover
+                  inputBackground: `hsl(var(--background))`, // Use theme background
+                  inputBorder: `hsl(var(--border))`, // Use theme border
+                  inputBorderHover: `hsl(var(--accent-primary))`, // Use theme accent on hover
+                  inputBorderFocus: `hsl(var(--accent-primary))`, // Use theme accent on focus
+                  inputText: `hsl(var(--foreground))`, // Use theme text
+                  anchorTextColor: `hsl(var(--accent-primary))`, // Theme accent for links
+                  anchorTextHoverColor: `hsl(170 80% 30%)`, // Slightly darker accent on link hover
+                },
+                radii: {
+                  button: '50px', // Pill-shaped buttons
+                  input: '0.5rem', // Rounded inputs
+                  card: '1rem', // Rounded cards
                 },
               },
             },
@@ -49,8 +54,8 @@ const LoginPage: React.FC = () => {
           theme="light" // Explicitly set to light theme
           view="sign_in" // Explicitly set to sign_in view
         />
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 

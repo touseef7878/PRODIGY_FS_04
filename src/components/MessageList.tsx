@@ -58,10 +58,10 @@ const MessageList: React.FC<MessageListProps> = ({ messages, currentUserId }) =>
               )}
               <div
                 className={cn(
-                  "max-w-[70%] rounded-xl p-3 text-sm shadow-md", // Rounded corners and shadow
+                  "max-w-[70%] p-3 text-sm", 
                   isCurrentUser
-                    ? "bg-primary text-primary-foreground rounded-br-none" // Current user messages
-                    : "bg-muted text-muted-foreground rounded-bl-none" // Other user messages
+                    ? "message-outgoing" // Current user messages
+                    : "message-incoming" // Other user messages
                 )}
               >
                 <p className="font-medium text-xs mb-1 opacity-80">{senderName}</p>

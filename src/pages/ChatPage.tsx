@@ -353,7 +353,9 @@ const ChatPage: React.FC = () => {
             <p className="text-center">Start by selecting a chat from the sidebar or create a new one.</p>
           </div>
         )}
-        <MadeWithProchat />
+        <div className="footer mt-auto">
+          Made with ❤️ by Touseef
+        </div>
       </div>
     </ChatLayout>
   );
