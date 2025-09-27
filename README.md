@@ -1,4 +1,4 @@
-# Emerald Lobster Snap - Real-time Chat Application
+# Prochat - Real-time Chat Application
 
 A modern, full-stack chat application built with React, TypeScript, and Vite, featuring real-time messaging, user authentication, and responsive design with shadcn/ui components.
 
@@ -44,7 +44,7 @@ A modern, full-stack chat application built with React, TypeScript, and Vite, fe
 ## 🏗️ Project Structure
 
 ```
-emerald-lobster-snap/
+prochat/
 ├── public/              # Static assets
 ├── src/
 │   ├── components/      # Reusable UI components

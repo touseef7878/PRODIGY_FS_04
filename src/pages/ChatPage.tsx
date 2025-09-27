@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import ChatLayout from '@/components/layout/ChatLayout';
 import Sidebar from '@/components/Sidebar';
-import { MadeWithDyad } from '@/components/made-with-dyad';
+import { MadeWithProchat } from '@/components/MadeWithProchat';
 import MessageInput from '@/components/MessageInput';
 import MessageList from '@/components/MessageList';
 import { showError, showInfo } from '@/utils/toast';
@@ -353,7 +353,7 @@ const ChatPage: React.FC = () => {
             <p className="text-center">Start by selecting a chat from the sidebar or create a new one.</p>
           </div>
         )}
-        <MadeWithDyad />
+        <MadeWithProchat />
       </div>
     </ChatLayout>
   );
