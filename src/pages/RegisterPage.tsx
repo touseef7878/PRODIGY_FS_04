@@ -2,7 +2,6 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useSession } from '@/components/SessionContextProvider'; // Import useSession
 
 const RegisterPage: React.FC = () => {
@@ -16,14 +15,13 @@ const RegisterPage: React.FC = () => {
   }, [session, navigate]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center auth-page p-4">
-      <div className="form-card w-full max-w-md mx-auto">
+    <div className="w-full max-w-md p-8 bg-white rounded-xl shadow dark:bg-gray-900">
         <div className="text-center mb-6">
           <h2 className="text-2xl font-bold text-foreground">Register</h2>
         </div>
         <Auth
           supabaseClient={supabase}
-          providers={[]} // No third-party providers for now
+          providers={[]}
           appearance={{
             theme: ThemeSupa,
             variables: {
@@ -35,13 +33,13 @@ const RegisterPage: React.FC = () => {
                   defaultButtonBackgroundHover: `hsl(170 80% 30%)`, // Slightly darker teal on hover
                   defaultButtonBorder: `hsl(170 80% 40%)`,
                   defaultButtonText: `hsl(0 0% 100%)`,
-                  inputBackground: `hsl(var(--card))`, // Use card background
-                  inputBorder: `hsl(var(--border))`, // Use theme border
-                  inputBorderHover: `hsl(var(--accent-primary))`, // Use theme accent on hover
-                  inputBorderFocus: `hsl(var(--accent-primary))`, // Use theme accent on focus
-                  inputText: `hsl(var(--foreground))`, // Use theme text
-                  anchorTextColor: `hsl(var(--accent-primary))`, // Theme accent for links
-                  anchorTextHoverColor: `hsl(170 80% 30%)`, // Slightly darker accent on link hover
+                  inputBackground: `hsl(var(--card))`,
+                  inputBorder: `hsl(var(--border))`,
+                  inputBorderHover: `hsl(var(--accent-primary))`,
+                  inputBorderFocus: `hsl(var(--accent-primary))`,
+                  inputText: `hsl(var(--foreground))`,
+                  anchorTextColor: `hsl(var(--accent-primary))`,
+                  anchorTextHoverColor: `hsl(170 80% 30%)`,
                 },
                 radii: {
                   button: '50px', // Pill-shaped buttons
@@ -55,7 +53,6 @@ const RegisterPage: React.FC = () => {
           view="sign_up" // Explicitly set to sign_up view
         />
       </div>
-    </div>
   );
 };
 
