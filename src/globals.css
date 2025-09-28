@@ -239,3 +239,38 @@ body:not(.auth-page) {
   background: hsl(var(--accent-primary) / 0.1) !important;
   border-radius: 0.5rem;
 }
+
+/* Mobile sidebar transition */
+.sidebar-mobile-hidden {
+  transform: translateX(-100%);
+  opacity: 0;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.sidebar-mobile-visible {
+  transform: translateX(0);
+  opacity: 1;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+/* Smooth transition for chat area */
+.chat-area-mobile {
+  transition: margin-left 0.3s ease;
+}
+
+/* Responsive adjustments for mobile */
+@media (max-width: 767px) {
+  .mobile-sidebar-shown {
+    display: block;
+  }
+  
+  .mobile-sidebar-hidden {
+    display: none;
+  }
+  
+  /* Ensure chat area takes full width when sidebar is hidden */
+  .mobile-chat-full-width {
+    width: 100%;
+    margin-left: 0;
+  }
+}

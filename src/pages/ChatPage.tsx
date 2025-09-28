@@ -8,6 +8,7 @@ import MessageInput from '@/components/MessageInput';
 import MessageList from '@/components/MessageList';
 import { showError, showInfo } from '@/utils/toast';
 import { useSession } from '@/components/SessionContextProvider';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface Message {
   id: string;
@@ -40,6 +41,7 @@ const ChatPage: React.FC = () => {
   const [sidebarRefreshKey, setSidebarRefreshKey] = useState(0); // Key to force sidebar re-render
 
   const currentUserId = session?.user?.id;
+  const isMobile = useIsMobile();
 
   const markChatAsRead = useCallback(async (chatId: string, chatType: 'public' | 'private') => {
     if (!currentUserId) return;
@@ -115,7 +117,7 @@ const ChatPage: React.FC = () => {
     setMessages([]); // Clear messages when switching chats
     console.log(`[ChatPage] Chat selected: ID=${chatId}, Name=${chatName}, Type=${chatType}. Messages cleared.`);
     markChatAsRead(chatId, chatType); // Mark as read when selected
-  }, [markChatAsRead]);
+  }, [markChatAsRead, isMobile]);
 
   const fetchMessages = useCallback(async (chatId: string, chatType: 'public' | 'private') => {
     setLoadingMessages(true);
@@ -315,6 +317,12 @@ const ChatPage: React.FC = () => {
 
   console.log("[ChatPage] Rendered. Current messages state:", messages);
 
+  const handleBackToSidebar = () => {
+    setSelectedChatId(undefined);
+    setSelectedChatName(undefined);
+    setSelectedChatType(undefined);
+  };
+
   return (
     <div className="h-screen flex flex-col bg-background text-foreground">
       <ChatLayout
@@ -324,9 +332,10 @@ const ChatPage: React.FC = () => {
             selectedChatId={selectedChatId}
             selectedChatType={selectedChatType}
             onSelectChat={handleSelectChat}
-            // Removed onChatsUpdated prop as it's no longer expected by Sidebar
           />
         }
+        isChatSelected={!!(selectedChatId && selectedChatType)}
+        onBackToSidebar={handleBackToSidebar}
       >
         <div className="flex h-full flex-col">
           <div className="flex items-center h-16 border-b border-border px-4">
