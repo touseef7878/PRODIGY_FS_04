@@ -183,9 +183,11 @@ const ChatPage: React.FC = () => {
               <p className="text-center">Start by selecting a chat from the sidebar or create a new one.</p>
             </div>
           )}
-          <div className="footer">
-            Made with ❤️ by Touseef
-          </div>
+          {!isMobile && (
+            <div className="footer">
+              Made with ❤️ by Touseef
+            </div>
+          )}
         </div>
       </ChatLayout>
     </div>
