@@ -39,8 +39,21 @@ const MessageList: React.FC<MessageListProps> = ({ messages, currentUserId }) =>
         {messages.map((message) => {
           const isCurrentUser = message.sender_id === currentUserId;
           // Access the first element of the profiles array
-          const senderName = message.profiles?.[0]?.first_name || message.profiles?.[0]?.username || 'Unknown User';
-          const senderAvatar = message.profiles?.[0]?.avatar_url || `https://api.dicebear.com/7.x/lorelei/svg?seed=${senderName}`;
+          const profile = message.profiles?.[0];
+          
+          let senderName = 'Unknown User';
+          if (isCurrentUser) {
+            // For current user, check session data first
+            senderName = 'You';
+          } else if (profile) {
+            // Use first_name if available, otherwise username
+            senderName = profile.first_name || profile.username || `User ${message.sender_id.slice(0, 8)}`;
+          } else {
+            // If no profile data, try to get from session metadata as a fallback
+            senderName = `User ${message.sender_id.slice(0, 8)}`;
+          }
+          
+          const senderAvatar = profile?.avatar_url || `https://api.dicebear.com/7.x/lorelei/svg?seed=${senderName}`;
 
           return (
             <div
@@ -64,13 +77,10 @@ const MessageList: React.FC<MessageListProps> = ({ messages, currentUserId }) =>
                     : "bg-card text-foreground rounded-bl-none border border-sidebar-border/50 message-incoming"
                 )}
               >
-                {!isCurrentUser && (
-                  <p className="font-medium text-xs mb-1 opacity-80">{senderName}</p>
-                )}
+                <p className="font-medium text-xs mb-1 opacity-80">
+                  {senderName}
+                </p>
                 <p>{message.content}</p>
-                {isCurrentUser && (
-                  <p className="font-medium text-xs mt-1 text-right opacity-80">You</p>
-                )}
               </div>
               {isCurrentUser && (
                 <Avatar className="h-8 w-8">

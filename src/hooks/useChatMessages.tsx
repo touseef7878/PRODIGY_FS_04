@@ -35,13 +35,7 @@ export const useChatMessages = (chatId: string | undefined, chatType: 'public' |
         created_at,
         sender_id,
         content,
-        ${type === 'public' ? 'chat_room_id' : 'private_chat_id'},
-        profiles (
-          username,
-          avatar_url,
-          first_name,
-          last_name
-        )
+        ${type === 'public' ? 'chat_room_id' : 'private_chat_id'}
       `)
       .eq(type === 'public' ? 'chat_room_id' : 'private_chat_id', id)
       .order('created_at', { ascending: true });
@@ -53,7 +47,33 @@ export const useChatMessages = (chatId: string | undefined, chatType: 'public' |
       console.error("Error fetching messages:", error);
       setMessages([]);
     } else {
-      setMessages(data as Message[]);
+      // Process the data and fetch profile information for each message
+      const processMessages = async () => {
+        const processedData = await Promise.all(data.map(async (msg) => {
+          // Fetch profile information for each message sender
+          const { data: profileData, error: profileError } = await supabase
+            .from('profiles')
+            .select('username, avatar_url, first_name, last_name')
+            .eq('id', msg.sender_id)
+            .single();
+            
+          if (profileError) {
+            console.error(`Error fetching profile for user ${msg.sender_id}:`, profileError);
+            return {
+              ...msg,
+              profiles: null
+            };
+          }
+          
+          return {
+            ...msg,
+            profiles: profileData ? [profileData] : null
+          };
+        }));
+        setMessages(processedData as Message[]);
+      };
+      
+      processMessages();
     }
     setLoadingMessages(false);
   }, [supabase]);
@@ -110,20 +130,25 @@ export const useChatMessages = (chatId: string | undefined, chatType: 'public' |
       const handleNewMessage = async (payload: { new: any }) => {
         const newMessage = payload.new as Message;
 
-        // Fetch sender profile if not already attached
+        // Fetch sender profile to ensure we have the username
         let profile = null;
         if (newMessage.sender_id) {
-          const { data: profileData } = await supabase
+          const { data: profileData, error: profileError } = await supabase
             .from('profiles')
             .select('username, avatar_url, first_name, last_name')
             .eq('id', newMessage.sender_id)
             .single();
-          profile = profileData;
+            
+          if (profileError) {
+            console.error('Error fetching profile for message:', profileError);
+          } else {
+            profile = profileData;
+          }
         }
 
         const messageWithProfile: Message = {
           ...newMessage,
-          profiles: profile ? [profile] : [],
+          profiles: profile ? [profile] : null, // Keep as null if no profile found
         };
 
         setMessages((prevMessages) => {
