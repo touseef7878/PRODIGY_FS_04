@@ -274,9 +274,35 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onS
     );
   }
 
-  return (
+    return (
     <div className="flex h-full max-h-screen flex-col bg-sidebar-background text-foreground">
-      <div className="flex items-center justify-between p-4 border-b border-sidebar-border">
+      {/* Mobile Navigation Bar */}
+      <div className="p-4 border-b border-sidebar-border md:hidden">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-semibold">Chats</h2>
+          <div className="flex items-center space-x-3">
+            <button className="p-2 rounded-full hover:bg-accent transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-plus">
+                <path d="M5 12h14"/><path d="M12 5v14"/>
+              </svg>
+            </button>
+            <button className="p-2 rounded-full hover:bg-accent transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-message-square">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+              </svg>
+            </button>
+            <button className="p-2 rounded-full hover:bg-accent transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-settings">
+                <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.09a2 2 0 0 1-1-1.73v-.52a2 2 0 0 1 1-1.74l.15-.08a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      {/* Desktop Header */}
+      <div className="hidden md:flex items-center justify-between p-4 border-b border-sidebar-border">
         <h2 className="text-xl font-semibold">Chats</h2>
         <div className="flex items-center space-x-2">
           <CreateChatRoomDialog onChatRoomCreated={fetchChats} />
@@ -287,6 +313,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onS
           <ProfileSettingsDialog onProfileUpdated={fetchChats} />
         </div>
       </div>
+      
       <ScrollArea className="flex-1">
         <div className="p-2">
           {chatRooms.length === 0 && privateChats.length === 0 ? (
@@ -301,25 +328,34 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onS
                     <div
                       key={`public-${chat.id}`}
                       className={cn(
-                        "flex items-center gap-3 rounded-lg p-3 text-left text-sm transition-all hover:bg-accent cursor-pointer",
-                        selectedChatId === chat.id && selectedChatType === 'public' && "sidebar-active",
+                        "flex items-center gap-3 rounded-xl p-3 text-left text-sm transition-all hover:bg-accent cursor-pointer shadow-sm mb-2 bg-card backdrop-blur-sm border border-sidebar-border/50",
+                        selectedChatId === chat.id && selectedChatType === 'public' && "ring-2 ring-accent-primary/50 bg-accent",
                       )}
                       onClick={() => onSelectChat(chat.id, chat.name, 'public')}
                     >
-                      <Avatar className="h-9 w-9">
-                        <AvatarImage src={`https://api.dicebear.com/7.x/lorelei/svg?seed=${chat.name}`} alt={chat.name} />
-                        <AvatarFallback><Users className="h-5 w-5" /></AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1">
+                      <div className="relative">
+                        <Avatar className="h-11 w-11 ring-2 ring-sidebar-border/50">
+                          <AvatarImage 
+                            src={`https://api.dicebear.com/7.x/lorelei/svg?seed=${chat.name}`} 
+                            alt={chat.name} 
+                          />
+                          <AvatarFallback className="bg-accent/30 text-accent-foreground">
+                            <Users className="h-5 w-5" />
+                          </AvatarFallback>
+                        </Avatar>
+                        {/* Online Status Indicator */}
+                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full ring-2 ring-sidebar-background border border-sidebar-border"></div>
+                      </div>
+                      <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between">
-                          <p className="font-medium">{chat.name}</p>
+                          <p className="font-medium truncate">{chat.name}</p>
                           {chat.unread_count && chat.unread_count > 0 && (
-                            <Badge className="bg-green-500 text-white rounded-full px-2 py-0.5 text-xs">
+                            <Badge className="bg-accent-primary text-white rounded-full px-2 py-0.5 text-xs min-w-[20px] flex items-center justify-center">
                               {chat.unread_count}
                             </Badge>
                           )}
                         </div>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-xs text-muted-foreground truncate">
                           {chat.last_message_content?.substring(0, 30)}
                           {chat.last_message_content && chat.last_message_content.length > 30 ? "..." : ""}
                         </p>
@@ -337,25 +373,34 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onS
                     <div
                       key={`private-${chat.id}`}
                       className={cn(
-                        "flex items-center gap-3 rounded-lg p-3 text-left text-sm transition-all hover:bg-accent cursor-pointer",
-                        selectedChatId === chat.id && selectedChatType === 'private' && "sidebar-active",
+                        "flex items-center gap-3 rounded-xl p-3 text-left text-sm transition-all hover:bg-accent cursor-pointer shadow-sm mb-2 bg-card backdrop-blur-sm border border-sidebar-border/50",
+                        selectedChatId === chat.id && selectedChatType === 'private' && "ring-2 ring-accent-primary/50 bg-accent",
                       )}
                       onClick={() => onSelectChat(chat.id, chat.other_user_profile.username, 'private')}
                     >
-                      <Avatar className="h-9 w-9">
-                        <AvatarImage src={chat.other_user_profile.avatar_url || `https://api.dicebear.com/7.x/lorelei/svg?seed=${chat.other_user_profile.username}`} alt={chat.other_user_profile.username} />
-                        <AvatarFallback><MessageSquare className="h-5 w-5" /></AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1">
+                      <div className="relative">
+                        <Avatar className="h-11 w-11 ring-2 ring-sidebar-border/50">
+                          <AvatarImage 
+                            src={chat.other_user_profile.avatar_url || `https://api.dicebear.com/7.x/lorelei/svg?seed=${chat.other_user_profile.username}`} 
+                            alt={chat.other_user_profile.username} 
+                          />
+                          <AvatarFallback className="bg-accent/30 text-accent-foreground">
+                            <MessageSquare className="h-5 w-5" />
+                          </AvatarFallback>
+                        </Avatar>
+                        {/* Online Status Indicator */}
+                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full ring-2 ring-sidebar-background border border-sidebar-border"></div>
+                      </div>
+                      <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between">
-                          <p className="font-medium">{chat.other_user_profile.first_name || chat.other_user_profile.username}</p>
+                          <p className="font-medium truncate">{chat.other_user_profile.first_name || chat.other_user_profile.username}</p>
                           {chat.unread_count && chat.unread_count > 0 && (
-                            <Badge className="bg-green-500 text-white rounded-full px-2 py-0.5 text-xs">
+                            <Badge className="bg-accent-primary text-white rounded-full px-2 py-0.5 text-xs min-w-[20px] flex items-center justify-center">
                               {chat.unread_count}
                             </Badge>
                           )}
                         </div>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-xs text-muted-foreground truncate">
                           {chat.last_message_content?.substring(0, 30)}
                           {chat.last_message_content && chat.last_message_content.length > 30 ? "..." : ""}
                         </p>

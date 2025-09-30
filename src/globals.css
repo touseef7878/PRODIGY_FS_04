@@ -201,29 +201,31 @@ body:not(.auth-page) {
 /* Chat message styling */
 .message-incoming {
   background: hsl(var(--card));
-  border-radius: 1rem 1rem 1rem 0.25rem;
-  padding: 0.75rem 1rem;
+  border-radius: 1.5rem 1.5rem 1.5rem 0.25rem;
+  padding: 1rem 1.25rem;
   max-width: 70%;
-  box-shadow: 0 2px 5px hsl(240 5% 10% / 0.1);
+  box-shadow: 0 4px 12px hsl(240 5% 10% / 0.1);
+  border: 1px solid hsl(var(--border) / 0.5);
+  backdrop-filter: blur(10px);
 }
 
 .dark .message-incoming {
-  background: hsl(var(--muted));
-  box-shadow: 0 2px 5px hsl(240 10% 10% / 0.2);
+  background: hsl(var(--muted) / 0.7);
+  box-shadow: 0 4px 12px hsl(240 10% 10% / 0.2);
 }
 
 .message-outgoing {
-  background: hsl(var(--accent-secondary));
-  border-radius: 1rem 1rem 0.25rem 1rem;
-  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, hsl(var(--accent-primary)), hsl(var(--accent-secondary)));
+  border-radius: 1.5rem 0.25rem 1.5rem 1.5rem;
+  padding: 1rem 1.25rem;
   max-width: 70%;
-  box-shadow: 0 2px 5px hsl(170 80% 40% / 0.1);
+  box-shadow: 0 4px 15px hsl(var(--accent-primary) / 0.3);
   margin-left: auto;
 }
 
 .dark .message-outgoing {
   background: hsl(var(--accent-primary));
-  box-shadow: 0 2px 5px hsl(170 80% 40% / 0.2);
+  box-shadow: 0 4px 15px hsl(var(--accent-primary) / 0.4);
 }
 
 /* Footer styling */
@@ -232,6 +234,17 @@ body:not(.auth-page) {
   padding: 1rem;
   color: hsl(var(--muted-foreground));
   font-size: 0.875rem;
+  background: hsl(var(--card));
+  border-top: 1px solid hsl(var(--border));
+  backdrop-filter: blur(10px);
+}
+
+/* Glassmorphism effect */
+.glass {
+  background: hsl(var(--card) / 0.7);
+  backdrop-filter: blur(10px);
+  border: 1px solid hsl(var(--border) / 0.5);
+  border-radius: var(--radius);
 }
 
 /* Active chat item in sidebar */

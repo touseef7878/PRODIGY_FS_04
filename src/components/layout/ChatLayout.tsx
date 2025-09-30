@@ -83,14 +83,14 @@ const ChatLayout: React.FC<ChatLayoutProps> = ({
           document.cookie = `react-resizable-panels:collapsed=${false}`;
         }}
         className={cn(
-          "bg-card border-r border-border transition-all duration-300 ease-in-out",
+          "bg-card border-r border-border transition-all duration-300 ease-in-out backdrop-blur-sm",
           isCollapsed && "min-w-[50px]",
-          !isCollapsed && "min-w-[200px]"
+          !isCollapsed && "min-w-[250px]"
         )}
       >
         {sidebar}
       </ResizablePanel>
-      <ResizableHandle withHandle />
+      <ResizableHandle withHandle className="bg-border/50 hover:bg-accent-primary/50" />
       <ResizablePanel defaultSize={defaultLayout[1]} minSize={30} className="bg-background">
         {children}
       </ResizablePanel>

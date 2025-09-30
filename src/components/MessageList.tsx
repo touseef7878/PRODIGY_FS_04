@@ -58,14 +58,19 @@ const MessageList: React.FC<MessageListProps> = ({ messages, currentUserId }) =>
               )}
               <div
                 className={cn(
-                  "max-w-[70%] p-3 text-sm", 
+                  "max-w-[70%] p-4 text-sm rounded-3xl relative", 
                   isCurrentUser
-                    ? "message-outgoing" // Current user messages
-                    : "message-incoming" // Other user messages
+                    ? "bg-accent-primary text-white rounded-br-none message-outgoing" 
+                    : "bg-card text-foreground rounded-bl-none border border-sidebar-border/50 message-incoming"
                 )}
               >
-                <p className="font-medium text-xs mb-1 opacity-80">{senderName}</p>
+                {!isCurrentUser && (
+                  <p className="font-medium text-xs mb-1 opacity-80">{senderName}</p>
+                )}
                 <p>{message.content}</p>
+                {isCurrentUser && (
+                  <p className="font-medium text-xs mt-1 text-right opacity-80">You</p>
+                )}
               </div>
               {isCurrentUser && (
                 <Avatar className="h-8 w-8">

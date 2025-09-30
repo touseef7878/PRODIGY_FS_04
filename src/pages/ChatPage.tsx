@@ -141,11 +141,28 @@ const ChatPage: React.FC = () => {
         onBackToSidebar={handleBackToSidebar}
       >
         <div className="flex h-full flex-col">
-          <div className="flex items-center h-16 border-b border-border px-4">
+          <div className="flex items-center h-16 border-b border-border px-4 bg-card/70 backdrop-blur-sm">
             {selectedChatName ? (
-              <h2 className="text-xl font-semibold">
-                {selectedChatType === 'public' ? `Chat Room: ${selectedChatName}` : `Private Chat with ${selectedChatName}`}
-              </h2>
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <div className="h-10 w-10 rounded-full ring-2 ring-border overflow-hidden">
+                    <img 
+                      src={`https://api.dicebear.com/7.x/lorelei/svg?seed=${selectedChatName}`} 
+                      alt={selectedChatName} 
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full ring-2 ring-background"></div>
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold leading-none">
+                    {selectedChatType === 'public' ? `${selectedChatName}` : `${selectedChatName}`}
+                  </h2>
+                  <p className="text-xs text-muted-foreground leading-none">
+                    {selectedChatType === 'public' ? 'Public room' : 'Online'}
+                  </p>
+                </div>
+              </div>
             ) : (
               <h2 className="text-xl font-semibold text-muted-foreground">Select a chat</h2>
             )}
