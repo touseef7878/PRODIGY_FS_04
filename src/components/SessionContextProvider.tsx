@@ -1,12 +1,13 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { Session, SupabaseClient } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase'; // Import your Supabase client
 
 interface SessionContextType {
   session: Session | null;
   supabase: SupabaseClient;
+  signOut: () => Promise<void>;
 }
 
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
@@ -27,15 +28,25 @@ const SessionContextProvider: React.FC<SessionContextProviderProps> = ({ childre
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Add signOut function
+  const signOut = useCallback(async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error('Error signing out:', error.message);
+    }
+  }, []);
+
   useEffect(() => {
+    // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setLoading(false);
     });
 
+    // Listen for auth state changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => { // Fixed: prefixed 'event' with '_'
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
     });
 
@@ -49,7 +60,7 @@ const SessionContextProvider: React.FC<SessionContextProviderProps> = ({ childre
   }
 
   return (
-    <SessionContext.Provider value={{ session, supabase }}>
+    <SessionContext.Provider value={{ session, supabase, signOut }}>
       {children}
     </SessionContext.Provider>
   );

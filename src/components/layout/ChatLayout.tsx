@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import {
   ResizableHandle,
   ResizablePanel,
@@ -17,7 +17,7 @@ interface ChatLayoutProps {
   onBackToSidebar?: () => void; // New prop for back button functionality
 }
 
-const ChatLayout: React.FC<ChatLayoutProps> = ({
+const ChatLayout: React.FC<ChatLayoutProps> = memo(({
   sidebar,
   children,
   defaultLayout = [20, 80],
@@ -76,11 +76,11 @@ const ChatLayout: React.FC<ChatLayoutProps> = ({
         maxSize={20}
         onCollapse={() => {
           setIsCollapsed(true);
-          document.cookie = `react-resizable-panels:collapsed=${true}`;
+          document.cookie = `react-resizable-panels:collapsed=${JSON.stringify(true)}`;
         }}
         onExpand={() => {
           setIsCollapsed(false);
-          document.cookie = `react-resizable-panels:collapsed=${false}`;
+          document.cookie = `react-resizable-panels:collapsed=${JSON.stringify(false)}`;
         }}
         className={cn(
           "bg-card border-r border-border transition-all duration-300 ease-in-out backdrop-blur-sm",
@@ -96,6 +96,8 @@ const ChatLayout: React.FC<ChatLayoutProps> = ({
       </ResizablePanel>
     </ResizablePanelGroup>
   );
-};
+});
+
+ChatLayout.displayName = 'ChatLayout';
 
 export default ChatLayout;

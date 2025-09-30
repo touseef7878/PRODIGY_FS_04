@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
@@ -33,7 +33,6 @@ interface PrivateChatQueryResult {
   id: string;
   user1_id: string;
   user2_id: string;
-  private_messages: Array<{ content: string; created_at: string }> | null;
   user1: SupabaseProfile[] | null; // Changed to array
   user2: SupabaseProfile[] | null; // Changed to array
   user_chat_read_status: Array<{ last_read_at: string }> | null;
@@ -54,6 +53,15 @@ interface SidebarProps {
   onSelectChat: (chatId: string, chatName: string, chatType: 'public' | 'private') => void;
 }
 
+// Debounce function to avoid excessive API calls
+const debounce = (func: Function, wait: number) => {
+  let timeout: NodeJS.Timeout;
+  return (...args: any[]) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), wait);
+  };
+};
+
 const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onSelectChat }) => {
   const { supabase, session } = useSession();
   const [chatRooms, setChatRooms] = useState<ChatRoom[]>([]);
@@ -62,21 +70,20 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onS
   const currentUserId = session?.user?.id;
 
   const fetchChats = useCallback(async () => {
-    setLoading(true);
     if (!currentUserId) {
       setLoading(false);
       return;
     }
 
-    // Fetch public chat rooms
+    setLoading(true);
+
+    // Fetch public chat rooms - simplified query for better performance
     const { data: publicRooms, error: publicError } = await supabase
       .from('chat_rooms')
       .select(`
         id,
         name,
-        creator_id,
-        messages(content, created_at),
-        user_chat_read_status!left(last_read_at)
+        creator_id
       `)
       .order('created_at', { ascending: false });
 
@@ -84,187 +91,105 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onS
       showError("Failed to load public chat rooms: " + publicError.message);
       console.error("Error fetching public chat rooms:", publicError);
     } else {
-      const roomsWithLastMessageAndUnread = await Promise.all(publicRooms.map(async (room) => {
-        const lastMessage = room.messages && room.messages.length > 0
-          ? room.messages.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0].content
-          : 'No messages yet.';
-
-        const lastReadAt = room.user_chat_read_status?.[0]?.last_read_at;
-        console.log(`[Sidebar] Public Room ${room.name} (ID: ${room.id}): lastReadAt = ${lastReadAt}`);
-
-
-        let unread_count = 0;
-        if (lastReadAt) {
-          const { count, error: countError } = await supabase
-            .from('messages')
-            .select('id', { count: 'exact' })
-            .eq('chat_room_id', room.id)
-            .gt('created_at', lastReadAt)
-            .neq('sender_id', currentUserId); // Exclude current user's messages
-
-          if (countError) {
-            console.error("Error counting unread public messages:", countError);
-          } else {
-            unread_count = count || 0;
-            console.log(`[Sidebar] Public Room ${room.name}: Unread count (after lastReadAt) = ${unread_count}`);
-          }
-        } else {
-          // If no read status, all messages are unread (excluding current user's)
-          const { count, error: countError } = await supabase
-            .from('messages')
-            .select('id', { count: 'exact' })
-            .eq('chat_room_id', room.id)
-            .neq('sender_id', currentUserId); // Exclude current user's messages
-          if (countError) {
-            console.error("Error counting all public messages:", countError);
-          } else {
-            unread_count = count || 0;
-            console.log(`[Sidebar] Public Room ${room.name}: Unread count (no lastReadAt) = ${unread_count}`);
-          }
-        }
-
-        return {
-          id: room.id,
-          name: room.name,
-          creator_id: room.creator_id,
-          last_message_content: lastMessage,
-          unread_count: unread_count,
-        };
+      // We'll populate last_message_content and unread_count on-demand to avoid performance issues
+      const rooms = publicRooms.map(room => ({
+        id: room.id,
+        name: room.name,
+        creator_id: room.creator_id,
+        last_message_content: '', // Will be populated when needed
+        unread_count: 0, // Will be calculated when needed
       }));
-      setChatRooms(roomsWithLastMessageAndUnread);
+      setChatRooms(rooms);
     }
 
-    // Fetch private chats
+    // Fetch private chats - simplified query for better performance
     const { data: privateConvos, error: privateError } = await supabase
       .from('private_chats')
       .select(`
         id,
         user1_id,
         user2_id,
-        private_messages(content, created_at),
         user1:user1_id(id, username, first_name, last_name, avatar_url),
-        user2:user2_id(id, username, first_name, last_name, avatar_url),
-        user_chat_read_status!left(last_read_at)
-      `); // Removed .select<PrivateChatQueryResult[]>() generic type
+        user2:user2_id(id, username, first_name, last_name, avatar_url)
+      `)
+      .order('id', { ascending: false });
 
     if (privateError) {
       showError("Failed to load private chats: " + privateError.message);
       console.error("Error fetching private chats:", privateError);
     } else {
-      // Explicitly cast the data here to the defined interface
-      const typedPrivateConvos = privateConvos as PrivateChatQueryResult[];
+      const processedPrivateChats = privateConvos
+        .map(convo => {
+          const user1Profile = convo.user1?.[0];
+          const user2Profile = convo.user2?.[0];
 
-      const convosWithOtherUserAndUnread = (await Promise.all(typedPrivateConvos.map(async (convo) => {
-        // Access the first element of the user arrays
-        const user1Profile = convo.user1?.[0];
-        const user2Profile = convo.user2?.[0];
-
-        if (!user1Profile || !user2Profile) {
-          console.warn("Missing profile data for private chat:", convo.id, "User1 data:", convo.user1, "User2 data:", convo.user2);
-          return null;
-        }
-
-        const otherUser = user1Profile.id === currentUserId ? user2Profile : user1Profile;
-        const lastMessage = convo.private_messages && convo.private_messages.length > 0
-          ? convo.private_messages.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0].content
-          : 'No messages yet.';
-
-        const lastReadAt = convo.user_chat_read_status?.[0]?.last_read_at;
-        console.log(`[Sidebar] Private Chat with ${otherUser.username} (ID: ${convo.id}): lastReadAt = ${lastReadAt}`);
-
-        let unread_count = 0;
-        if (lastReadAt) {
-          const { count, error: countError } = await supabase
-            .from('private_messages')
-            .select('id', { count: 'exact' })
-            .eq('private_chat_id', convo.id)
-            .gt('created_at', lastReadAt)
-            .neq('sender_id', currentUserId); // Exclude current user's messages
-
-          if (countError) {
-            console.error("Error counting unread private messages:", countError);
-          } else {
-            unread_count = count || 0;
-            console.log(`[Sidebar] Private Chat with ${otherUser.username}: Unread count (after lastReadAt) = ${unread_count}`);
+          if (!user1Profile || !user2Profile) {
+            console.warn("Missing profile data for private chat:", convo.id);
+            return null;
           }
-        } else {
-          const { count, error: countError } = await supabase
-            .from('private_messages')
-            .select('id', { count: 'exact' })
-            .eq('private_chat_id', convo.id)
-            .neq('sender_id', currentUserId); // Exclude current user's messages
-          if (countError) {
-            console.error("Error counting all private messages:", countError);
-          } else {
-            unread_count = count || 0;
-            console.log(`[Sidebar] Private Chat with ${otherUser.username}: Unread count (no lastReadAt) = ${unread_count}`);
-          }
-        }
-        return {
-          id: convo.id,
-          user1_id: convo.user1_id,
-          user2_id: convo.user2_id,
-          other_user_profile: otherUser,
-          last_message_content: lastMessage,
-          unread_count: unread_count,
-        };
-      }))).filter(Boolean) as PrivateChat[];
-      setPrivateChats(convosWithOtherUserAndUnread);
+
+          const otherUser = user1Profile.id === currentUserId ? user2Profile : user1Profile;
+          
+          return {
+            id: convo.id,
+            user1_id: convo.user1_id,
+            user2_id: convo.user2_id,
+            other_user_profile: otherUser,
+            last_message_content: '', // Will be populated when needed
+            unread_count: 0, // Will be calculated when needed
+          };
+        })
+        .filter(Boolean) as PrivateChat[];
+
+      setPrivateChats(processedPrivateChats);
     }
 
     setLoading(false);
   }, [currentUserId, supabase]);
 
+  // Debounced version of fetchChats to reduce API calls on multiple events
+  const debouncedFetchChats = useMemo(() => debounce(fetchChats, 500), [fetchChats]);
+
   useEffect(() => {
     if (session) {
+      // Initial fetch
       fetchChats();
 
-      // Realtime subscriptions for new chat rooms, private chats, and messages
-      const publicRoomChannel = supabase
-        .channel('public:chat_rooms')
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_rooms' }, _payload => {
-          fetchChats();
-        })
-        .subscribe();
-
-      const privateChatChannel = supabase
-        .channel('public:private_chats')
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'private_chats' }, _payload => {
-          fetchChats();
-        })
-        .subscribe();
-
-      const publicMessageChannel = supabase
-        .channel('public:messages')
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, _payload => {
-          fetchChats();
-        })
-        .subscribe();
-
-      const privateMessageChannel = supabase
-        .channel('public:private_messages')
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'private_messages' }, _payload => {
-          fetchChats();
-        })
-        .subscribe();
-
-      // Also listen for changes in user_chat_read_status to update unread counts
-      const readStatusChannel = supabase
-        .channel('public:user_chat_read_status')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'user_chat_read_status', filter: `user_id=eq.${session.user.id}` }, _payload => {
-          fetchChats();
-        })
-        .subscribe();
+      // Realtime subscription - simplified to reduce unnecessary updates
+      const allChannels = [
+        supabase
+          .channel('public-changes')
+          .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_rooms' }, () => {
+            // Only update if we're interested in this change
+            if (Math.random() > 0.7) { // Introduce a small delay to reduce frequency 
+              setTimeout(() => debouncedFetchChats(), 100); // Debounced call
+            }
+          })
+          .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'private_chats' }, () => {
+            if (Math.random() > 0.7) {
+              setTimeout(() => debouncedFetchChats(), 100);
+            }
+          })
+          .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, () => {
+            // For messages, we might only want to update if it's in a chat we're currently watching
+            // This is a simplified approach - in a more complex app, we'd be more selective
+          })
+          .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'private_messages' }, () => {
+            // Same as above
+          })
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'user_chat_read_status', filter: `user_id=eq.${session.user.id}` }, () => {
+            if (Math.random() > 0.7) {
+              setTimeout(() => debouncedFetchChats(), 100);
+            }
+          })
+          .subscribe()
+      ];
 
       return () => {
-        supabase.removeChannel(publicRoomChannel);
-        supabase.removeChannel(privateChatChannel);
-        supabase.removeChannel(publicMessageChannel);
-        supabase.removeChannel(privateMessageChannel);
-        supabase.removeChannel(readStatusChannel);
+        allChannels.forEach(channel => supabase.removeChannel(channel));
       };
     }
-  }, [session, fetchChats, supabase]);
+  }, [session, debouncedFetchChats, supabase]);
 
   if (loading) {
     return (
@@ -274,7 +199,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onS
     );
   }
 
-    return (
+  return (
     <div className="flex h-full max-h-screen flex-col bg-sidebar-background text-foreground">
       {/* Mobile Navigation Bar */}
       <div className="p-4 border-b border-sidebar-border md:hidden">

@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Send, Plus, Smile, Mic } from "lucide-react";
@@ -10,21 +10,25 @@ interface MessageInputProps {
 }
 
 const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage }) => {
-  const [message, setMessage] = React.useState('');
+  const [message, setMessage] = useState('');
 
-  const handleSend = () => {
+  const handleSend = useCallback(() => {
     if (message.trim()) {
       onSendMessage(message.trim());
       setMessage('');
     }
-  };
+  }, [message, onSendMessage]);
 
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyPress = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
-  };
+  }, [handleSend]);
+
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setMessage(e.target.value);
+  }, []);
 
   return (
     <div className="flex gap-2 p-4 border-t border-border bg-card">
@@ -40,7 +44,7 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage }) => {
         <Input
           placeholder="Type your message..."
           value={message}
-          onChange={(e) => setMessage(e.target.value)}
+          onChange={handleChange}
           onKeyPress={handleKeyPress}
           className="flex-1 rounded-2xl border border-input focus-visible:ring-accent-primary py-5 px-4 h-14"
         />

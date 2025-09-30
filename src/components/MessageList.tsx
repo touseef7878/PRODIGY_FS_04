@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
@@ -10,12 +10,12 @@ interface Message {
   sender_id: string;
   content: string;
   created_at: string;
-  profiles: Array<{
+  profile?: {
     username: string;
     avatar_url?: string;
     first_name?: string;
     last_name?: string;
-  }> | null;
+  } | null;
 }
 
 interface MessageListProps {
@@ -24,13 +24,15 @@ interface MessageListProps {
 }
 
 const MessageList: React.FC<MessageListProps> = ({ messages, currentUserId }) => {
-  const messagesEndRef = React.useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  React.useEffect(() => {
-    console.log("[MessageList] Messages prop updated:", messages); // Log to confirm prop updates
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
+  // Scroll to bottom when messages change using a more efficient approach
+  useEffect(() => {
+    // Use a timeout to ensure the DOM is updated before scrolling
+    const timer = setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 10);
+    return () => clearTimeout(timer);
   }, [messages]);
 
   return (
@@ -38,22 +40,17 @@ const MessageList: React.FC<MessageListProps> = ({ messages, currentUserId }) =>
       <div className="space-y-4">
         {messages.map((message) => {
           const isCurrentUser = message.sender_id === currentUserId;
-          // Access the first element of the profiles array
-          const profile = message.profiles?.[0];
           
           let senderName = 'Unknown User';
           if (isCurrentUser) {
-            // For current user, check session data first
             senderName = 'You';
-          } else if (profile) {
-            // Use first_name if available, otherwise username
-            senderName = profile.first_name || profile.username || `User ${message.sender_id.slice(0, 8)}`;
+          } else if (message.profile) {
+            senderName = message.profile.first_name || message.profile.username || `User ${message.sender_id.slice(0, 8)}`;
           } else {
-            // If no profile data, try to get from session metadata as a fallback
             senderName = `User ${message.sender_id.slice(0, 8)}`;
           }
           
-          const senderAvatar = profile?.avatar_url || `https://api.dicebear.com/7.x/lorelei/svg?seed=${senderName}`;
+          const senderAvatar = message.profile?.avatar_url || `https://api.dicebear.com/7.x/lorelei/svg?seed=${senderName}`;
 
           return (
             <div

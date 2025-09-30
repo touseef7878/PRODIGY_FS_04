@@ -1,7 +1,6 @@
-
 "use client";
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useSession } from '@/components/SessionContextProvider';
 import { showError } from '@/utils/toast';
 
@@ -12,21 +11,25 @@ interface Message {
   created_at: string;
   chat_room_id?: string;
   private_chat_id?: string;
-  profiles: Array<{
+  profile?: {
     username: string;
     avatar_url?: string;
     first_name?: string;
     last_name?: string;
-  }> | null;
+  } | null;
 }
 
 export const useChatMessages = (chatId: string | undefined, chatType: 'public' | 'private' | undefined) => {
   const { supabase, session } = useSession();
   const [messages, setMessages] = useState<Message[]>([]);
   const [loadingMessages, setLoadingMessages] = useState(false);
+  const [profileCache, setProfileCache] = useState<Record<string, any>>({});
   const currentUserId = session?.user?.id;
 
+  // Memoize the fetchMessages function to avoid unnecessary re-renders
   const fetchMessages = useCallback(async (id: string, type: 'public' | 'private') => {
+    if (!id || !type) return;
+    
     setLoadingMessages(true);
     let query = supabase
       .from(type === 'public' ? 'messages' : 'private_messages')
@@ -46,35 +49,41 @@ export const useChatMessages = (chatId: string | undefined, chatType: 'public' |
       showError("Failed to load messages: " + error.message);
       console.error("Error fetching messages:", error);
       setMessages([]);
-    } else {
-      // Process the data and fetch profile information for each message
-      const processMessages = async () => {
-        const processedData = await Promise.all(data.map(async (msg) => {
-          // Fetch profile information for each message sender
-          const { data: profileData, error: profileError } = await supabase
-            .from('profiles')
-            .select('username, avatar_url, first_name, last_name')
-            .eq('id', msg.sender_id)
-            .single();
-            
-          if (profileError) {
-            console.error(`Error fetching profile for user ${msg.sender_id}:`, profileError);
-            return {
-              ...msg,
-              profiles: null
-            };
-          }
-          
-          return {
-            ...msg,
-            profiles: profileData ? [profileData] : null
-          };
-        }));
-        setMessages(processedData as Message[]);
-      };
-      
-      processMessages();
+      setLoadingMessages(false);
+      return;
     }
+
+    // Extract unique sender IDs to batch profile requests
+    const uniqueSenderIds = [...new Set(data.map(msg => msg.sender_id))];
+    
+    // Fetch profiles in batch to reduce database queries
+    const { data: profilesData, error: profilesError } = await supabase
+      .from('profiles')
+      .select('id, username, avatar_url, first_name, last_name')
+      .in('id', uniqueSenderIds);
+
+    if (profilesError) {
+      console.error("Error fetching profiles:", profilesError);
+    }
+
+    // Create a profile cache for quick lookup
+    const newProfileCache: Record<string, any> = {};
+    if (profilesData) {
+      profilesData.forEach(profile => {
+        newProfileCache[profile.id] = profile;
+      });
+      
+      // Update the global profile cache
+      setProfileCache(prev => ({ ...prev, ...newProfileCache }));
+    }
+
+    // Process messages with cached profiles
+    const processedData = data.map(msg => ({
+      ...msg,
+      profile: newProfileCache[msg.sender_id] || null
+    }));
+
+    setMessages(processedData as Message[]);
     setLoadingMessages(false);
   }, [supabase]);
 
@@ -87,6 +96,14 @@ export const useChatMessages = (chatId: string | undefined, chatType: 'public' |
     const table = chatType === 'public' ? 'messages' : 'private_messages';
     const chat_id_column = chatType === 'public' ? 'chat_room_id' : 'private_chat_id';
 
+    // Get current user profile from session to avoid fetching
+    const userProfile = {
+      username: session?.user?.user_metadata?.username || 'You',
+      avatar_url: session?.user?.user_metadata?.avatar_url,
+      first_name: session?.user?.user_metadata?.first_name,
+      last_name: session?.user?.user_metadata?.last_name,
+    };
+
     // Optimistic update object
     const optimisticMessage: Message = {
       id: `temp-${Date.now()}`, // Temporary ID
@@ -94,14 +111,7 @@ export const useChatMessages = (chatId: string | undefined, chatType: 'public' |
       content,
       created_at: new Date().toISOString(),
       [chat_id_column]: chatId,
-      profiles: [
-        {
-          username: session?.user?.user_metadata?.username || 'You',
-          avatar_url: session?.user?.user_metadata?.avatar_url,
-          first_name: session?.user?.user_metadata?.first_name,
-          last_name: session?.user?.user_metadata?.last_name,
-        },
-      ],
+      profile: userProfile,
     };
 
     // Add to local state immediately
@@ -125,14 +135,19 @@ export const useChatMessages = (chatId: string | undefined, chatType: 'public' |
 
   useEffect(() => {
     if (chatId && chatType) {
-      fetchMessages(chatId, chatType);
+      // Only fetch messages if we don't already have them for this chat
+      if (messages.length === 0 || messages[0]?.[chatType === 'public' ? 'chat_room_id' : 'private_chat_id'] !== chatId) {
+        fetchMessages(chatId, chatType);
+      }
 
       const handleNewMessage = async (payload: { new: any }) => {
         const newMessage = payload.new as Message;
 
-        // Fetch sender profile to ensure we have the username
-        let profile = null;
-        if (newMessage.sender_id) {
+        // Check if profile is already in cache before fetching
+        let profile = profileCache[newMessage.sender_id];
+        
+        if (!profile && newMessage.sender_id) {
+          // Fetch sender profile if not in cache
           const { data: profileData, error: profileError } = await supabase
             .from('profiles')
             .select('username, avatar_url, first_name, last_name')
@@ -143,12 +158,14 @@ export const useChatMessages = (chatId: string | undefined, chatType: 'public' |
             console.error('Error fetching profile for message:', profileError);
           } else {
             profile = profileData;
+            // Update cache
+            setProfileCache(prev => ({ ...prev, [newMessage.sender_id]: profileData }));
           }
         }
 
         const messageWithProfile: Message = {
           ...newMessage,
-          profiles: profile ? [profile] : null, // Keep as null if no profile found
+          profile: profile || null,
         };
 
         setMessages((prevMessages) => {
@@ -181,7 +198,7 @@ export const useChatMessages = (chatId: string | undefined, chatType: 'public' |
     } else {
       setMessages([]); // Clear messages when no chat is selected
     }
-  }, [chatId, chatType, fetchMessages, supabase, currentUserId]);
+  }, [chatId, chatType, fetchMessages, supabase, currentUserId, profileCache, messages]);
 
   return { messages, loadingMessages, sendMessage };
 };
