@@ -288,8 +288,8 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onS
                             <Users className="h-5 w-5" />
                           </AvatarFallback>
                         </Avatar>
-                          {/* Unread Badge for Receivers Only */}
-                          {chat.unread_count && chat.unread_count > 0 && chat.creator_id !== currentUserId && (
+                          {/* Unread Badge for anyone with unread messages */}
+                          {chat.unread_count && chat.unread_count > 0 && (
                             <span className="absolute -top-1 -right-1 bg-green-500 text-white text-xs px-2 py-0.5 rounded-full min-w-[20px] flex items-center justify-center">
                               {chat.unread_count}
                             </span>
@@ -299,7 +299,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onS
                         <div className="flex items-center justify-between">
                           <p className="font-medium truncate">{chat.name}</p>
                         </div>
-                        <p className={chat.unread_count && chat.unread_count > 0 && chat.creator_id !== currentUserId ? "font-bold text-black truncate" : "text-xs text-muted-foreground truncate"}>
+                        <p className={chat.unread_count && chat.unread_count > 0 ? "font-bold text-black truncate" : "text-xs text-muted-foreground truncate"}>
                           {chat.last_message_content?.substring(0, 30)}
                           {chat.last_message_content && chat.last_message_content.length > 30 ? "..." : ""}
                         </p>
