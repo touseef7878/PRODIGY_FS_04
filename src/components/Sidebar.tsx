@@ -69,87 +69,96 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onS
     setLoading(true);
 
     // Fetch public chat rooms
-    const { data: publicRooms, error: publicError } = await supabase
-      .from('chat_rooms')
-      .select(`id, name, creator_id`)
-      .order('created_at', { ascending: false });
+    try {
+      const { data: publicRooms, error: publicError } = await supabase
+        .from('chat_rooms')
+        .select(`id, name, creator_id`)
+        .order('created_at', { ascending: false });
 
-    let rooms: ChatRoom[] = [];
-    if (publicError) {
-      showError("Failed to load public chat rooms: " + publicError.message);
-      console.error("Error fetching public chat rooms:", publicError);
-    } else {
-      // Fetch unread_count for each room using the RPC
-      rooms = await Promise.all(
-        publicRooms.map(async (room: any) => {
-          let unread_count = 0;
-          try {
-            const { data: unreadData, error: unreadError } = await supabase.rpc('get_unread_count', {
-              p_chat_room_id: room.id,
-              p_user_id: currentUserId
-            });
-            if (!unreadError && typeof unreadData === 'number') {
-              unread_count = unreadData;
+      let rooms: ChatRoom[] = [];
+      if (publicError) {
+        showError("Failed to load public chat rooms: " + publicError.message);
+        console.error("Error fetching public chat rooms:", publicError);
+      } else if (publicRooms) {
+        // Fetch unread_count for each room using the RPC
+        rooms = await Promise.all(
+          publicRooms.map(async (room: any) => {
+            let unread_count = 0;
+            try {
+              const { data: unreadData, error: unreadError } = await supabase.rpc('get_unread_count', {
+                p_chat_room_id: room.id,
+                p_user_id: currentUserId
+              });
+              if (!unreadError && typeof unreadData === 'number') {
+                unread_count = unreadData;
+              }
+            } catch (e) {
+              // ignore
             }
-          } catch (e) {
-            // ignore
-          }
-          return {
-            id: room.id,
-            name: room.name,
-            creator_id: room.creator_id,
-            last_message_content: '', // Will be populated when needed
-            unread_count,
-          };
-        })
-      );
-      setChatRooms(rooms);
+            return {
+              id: room.id,
+              name: room.name,
+              creator_id: room.creator_id,
+              last_message_content: '', // Will be populated when needed
+              unread_count,
+            };
+          })
+        );
+        setChatRooms(rooms);
+      }
+    } catch (err) {
+      showError("Unexpected error loading public chat rooms.");
+      console.error(err);
     }
 
     // Fetch private chats
-    const { data: privateConvos, error: privateError } = await supabase
-      .from('private_chats')
-      .select(`id, user1_id, user2_id, user1:user1_id(id, username, first_name, last_name, avatar_url), user2:user2_id(id, username, first_name, last_name, avatar_url)`)
-      .order('id', { ascending: false });
+    try {
+      const { data: privateConvos, error: privateError } = await supabase
+        .from('private_chats')
+        .select(`id, user1_id, user2_id, user1:user1_id(id, username, first_name, last_name, avatar_url), user2:user2_id(id, username, first_name, last_name, avatar_url)`)
+        .order('id', { ascending: false });
 
-    let processedPrivateChats: PrivateChat[] = [];
-    if (privateError) {
-      showError("Failed to load private chats: " + privateError.message);
-      console.error("Error fetching private chats:", privateError);
-    } else {
-      processedPrivateChats = await Promise.all(
-        privateConvos.map(async (convo: any) => {
-          const user1Profile = convo.user1?.[0];
-          const user2Profile = convo.user2?.[0];
-          if (!user1Profile || !user2Profile) {
-            console.warn("Missing profile data for private chat:", convo.id);
-            return null;
-          }
-          const otherUser = user1Profile.id === currentUserId ? user2Profile : user1Profile;
-          let unread_count = 0;
-          try {
-            const { data: unreadData, error: unreadError } = await supabase.rpc('get_private_unread_count', {
-              p_private_chat_id: convo.id,
-              p_user_id: currentUserId
-            });
-            if (!unreadError && typeof unreadData === 'number') {
-              unread_count = unreadData;
+      let processedPrivateChats: (PrivateChat | null)[] = [];
+      if (privateError) {
+        showError("Failed to load private chats: " + privateError.message);
+        console.error("Error fetching private chats:", privateError);
+      } else if (privateConvos) {
+        processedPrivateChats = await Promise.all(
+          privateConvos.map(async (convo: any) => {
+            const user1Profile = convo.user1?.[0];
+            const user2Profile = convo.user2?.[0];
+            if (!user1Profile || !user2Profile) {
+              console.warn("Missing profile data for private chat:", convo.id);
+              return null;
             }
-          } catch (e) {
-            // ignore
-          }
-          return {
-            id: convo.id,
-            user1_id: convo.user1_id,
-            user2_id: convo.user2_id,
-            other_user_profile: otherUser,
-            last_message_content: '',
-            unread_count,
-          };
-        })
-      );
-      processedPrivateChats = processedPrivateChats.filter(Boolean) as PrivateChat[];
-      setPrivateChats(processedPrivateChats);
+            const otherUser = user1Profile.id === currentUserId ? user2Profile : user1Profile;
+            let unread_count = 0;
+            try {
+              const { data: unreadData, error: unreadError } = await supabase.rpc('get_private_unread_count', {
+                p_private_chat_id: convo.id,
+                p_user_id: currentUserId
+              });
+              if (!unreadError && typeof unreadData === 'number') {
+                unread_count = unreadData;
+              }
+            } catch (e) {
+              // ignore
+            }
+            return {
+              id: convo.id,
+              user1_id: convo.user1_id,
+              user2_id: convo.user2_id,
+              other_user_profile: otherUser,
+              last_message_content: '',
+              unread_count,
+            };
+          })
+        );
+        setPrivateChats(processedPrivateChats.filter(Boolean) as PrivateChat[]);
+      }
+    } catch (err) {
+      showError("Unexpected error loading private chats.");
+      console.error(err);
     }
 
     setLoading(false);
