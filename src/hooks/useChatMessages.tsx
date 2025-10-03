@@ -198,7 +198,7 @@ export const useChatMessages = (chatId: string | undefined, chatType: 'public' |
     } else {
       setMessages([]); // Clear messages when no chat is selected
     }
-  }, [chatId, chatType, fetchMessages, supabase, currentUserId, profileCache, messages]);
+  }, [chatId, chatType, fetchMessages, supabase, currentUserId]);
 
   return { messages, loadingMessages, sendMessage };
 };
