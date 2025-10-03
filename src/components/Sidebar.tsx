@@ -46,10 +46,10 @@ interface SidebarProps {
 
 // Debounce function to avoid excessive API calls
 const debounce = (func: Function, wait: number) => {
-  let timeout: NodeJS.Timeout;
+  let timeout: number;
   return (...args: any[]) => {
     clearTimeout(timeout);
-    timeout = setTimeout(() => func(...args), wait);
+    timeout = window.setTimeout(() => func(...args), wait);
   };
 };
 
@@ -177,27 +177,19 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onS
         supabase
           .channel('public-changes')
           .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_rooms' }, () => {
-            // Only update if we're interested in this change
-            if (Math.random() > 0.7) { // Introduce a small delay to reduce frequency 
-              setTimeout(() => debouncedFetchChats(), 100); // Debounced call
-            }
+            debouncedFetchChats();
           })
           .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'private_chats' }, () => {
-            if (Math.random() > 0.7) {
-              setTimeout(() => debouncedFetchChats(), 100);
-            }
+            debouncedFetchChats();
           })
           .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, () => {
-            // For messages, we might only want to update if it's in a chat we're currently watching
-            // This is a simplified approach - in a more complex app, we'd be more selective
+            debouncedFetchChats();
           })
           .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'private_messages' }, () => {
-            // Same as above
+            debouncedFetchChats();
           })
           .on('postgres_changes', { event: '*', schema: 'public', table: 'user_chat_read_status', filter: `user_id=eq.${session.user.id}` }, () => {
-            if (Math.random() > 0.7) {
-              setTimeout(() => debouncedFetchChats(), 100);
-            }
+            debouncedFetchChats();
           })
           .subscribe()
       ];
@@ -227,7 +219,6 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onS
               onChatRoomCreated={fetchChats}
               // Use a custom trigger for mobile (icon button)
               triggerButtonClassName="p-2 rounded-full hover:bg-accent transition-colors"
-              iconOnly
             />
             <StartPrivateChatDialog
               onChatSelected={(id, name, type) => {
@@ -235,12 +226,10 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onS
                 fetchChats();
               }}
               triggerButtonClassName="p-2 rounded-full hover:bg-accent transition-colors"
-              iconOnly
             />
             <ProfileSettingsDialog
               onProfileUpdated={fetchChats}
               triggerButtonClassName="p-2 rounded-full hover:bg-accent transition-colors"
-              iconOnly
             />
           </div>
         </div>
