@@ -194,8 +194,13 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onS
           .subscribe()
       ];
 
+      // Listen for a custom event to refetch chats
+      const handleRefetch = () => debouncedFetchChats();
+      window.addEventListener('sidebar:refetch', handleRefetch);
+
       return () => {
         allChannels.forEach(channel => supabase.removeChannel(channel));
+        window.removeEventListener('sidebar:refetch', handleRefetch);
       };
     }
   }, [session, debouncedFetchChats, supabase]);
