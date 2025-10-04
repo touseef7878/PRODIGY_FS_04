@@ -97,10 +97,11 @@ const ChatPage: React.FC = memo(() => {
   }, [currentUserId, supabase]);
 
   const handleSelectChat = useCallback((chatId: string, chatName: string, chatType: 'public' | 'private') => {
-    setSelectedChatId(chatId);
-    setSelectedChatName(chatName);
-    setSelectedChatType(chatType);
-    markChatAsRead(chatId, chatType); // Mark as read when selected
+  setSelectedChatId(chatId);
+  setSelectedChatName(chatName);
+  setSelectedChatType(chatType);
+  markChatAsRead(chatId, chatType); // Mark as read when selected
+  window.dispatchEvent(new Event('sidebar:refetch'));
   }, [markChatAsRead]);
 
   const handleSendMessage = async (content: string) => {
