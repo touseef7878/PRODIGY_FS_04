@@ -1,8 +1,10 @@
+
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
-import { useSession } from '@/components/SessionContextProvider'; // Import useSession
+import { useSession } from '@/components/SessionContextProvider';
+import '@/prochat-welcome.css';
 
 const RegisterPage: React.FC = () => {
   const { supabase, session } = useSession();
@@ -15,9 +17,16 @@ const RegisterPage: React.FC = () => {
   }, [session, navigate]);
 
   return (
-    <div className="w-full max-w-md p-8 bg-white rounded-xl shadow dark:bg-gray-900">
-        <div className="text-center mb-6">
-          <h2 className="text-2xl font-bold text-foreground">Register</h2>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-background text-foreground relative overflow-hidden py-8">
+      {/* Animated Blobs */}
+      <div className="prochat-blob prochat-blob1" />
+      <div className="prochat-blob prochat-blob2" />
+      <div className="prochat-blob prochat-blob3" />
+
+      <div className="relative z-10 w-full max-w-md mx-auto p-8 bg-card/80 rounded-2xl shadow-2xl backdrop-blur-md border border-border">
+        <div className="text-center mb-8">
+          <h2 className="prochat-hero text-4xl md:text-5xl font-extrabold mb-2 tracking-tight prochat-glow select-none">Prochat</h2>
+          <p className="text-base md:text-lg text-muted-foreground mb-2 animate-fade-in">Create your account and join the conversation!</p>
         </div>
         <Auth
           supabaseClient={supabase}
@@ -27,10 +36,10 @@ const RegisterPage: React.FC = () => {
             variables: {
               default: {
                 colors: {
-                  brand: `hsl(170 80% 40%)`, // Teal/green accent
-                  brandAccent: `hsl(0 0% 100%)`, // White text on brand buttons
+                  brand: `hsl(170 80% 40%)`,
+                  brandAccent: `hsl(0 0% 100%)`,
                   defaultButtonBackground: `hsl(170 80% 40%)`,
-                  defaultButtonBackgroundHover: `hsl(170 80% 30%)`, // Slightly darker teal on hover
+                  defaultButtonBackgroundHover: `hsl(170 80% 30%)`,
                   defaultButtonBorder: `hsl(170 80% 40%)`,
                   defaultButtonText: `hsl(0 0% 100%)`,
                   inputBackground: `hsl(var(--card))`,
@@ -42,17 +51,17 @@ const RegisterPage: React.FC = () => {
                   anchorTextHoverColor: `hsl(170 80% 30%)`,
                 },
                 radii: {
-                  button: '50px', // Pill-shaped buttons
-                  input: '0.5rem', // Rounded inputs
-                  card: '1rem', // Rounded cards
+                  buttonBorderRadius: '50px',
+                  inputBorderRadius: '0.5rem',
                 },
               },
             },
           }}
-          theme="light" // Explicitly set to light theme
-          view="sign_up" // Explicitly set to sign_up view
+          theme="light"
+          view="sign_up"
         />
       </div>
+    </div>
   );
 };
 
