@@ -23,6 +23,14 @@ interface MessageListProps {
   currentUserId: string | undefined;
 }
 
+const getDisplayName = (profile: Message['profile'], userId: string) => {
+  if (!profile) return `User ${userId.slice(0, 8)}`;
+  const isEmail = (str: string) => /^[[\w-\.]+@([[\w-]+.)+[\w-]{2,4}$/.test(str);
+  if (profile.first_name) return profile.first_name;
+  if (profile.username && !isEmail(profile.username)) return profile.username;
+  return `User ${userId.slice(0, 8)}`;
+};
+
 const MessageList: React.FC<MessageListProps> = ({ messages, currentUserId }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -41,14 +49,7 @@ const MessageList: React.FC<MessageListProps> = ({ messages, currentUserId }) =>
         {messages.map((message) => {
           const isCurrentUser = message.sender_id === currentUserId;
           
-          let senderName = 'Unknown User';
-          if (isCurrentUser) {
-            senderName = 'You';
-          } else if (message.profile) {
-            senderName = message.profile.first_name || message.profile.username || `User ${message.sender_id.slice(0, 8)}`;
-          } else {
-            senderName = `User ${message.sender_id.slice(0, 8)}`;
-          }
+          const senderName = isCurrentUser ? 'You' : getDisplayName(message.profile, message.sender_id);
           
           const senderAvatar = message.profile?.avatar_url || `https://api.dicebear.com/7.x/lorelei/svg?seed=${senderName}`;
 

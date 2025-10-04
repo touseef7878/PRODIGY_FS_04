@@ -32,6 +32,13 @@ interface StartPrivateChatDialogProps {
   onChatSelected: (chatId: string, chatName: string, chatType: 'private') => void;
 }
 
+const getDisplayName = (user: Profile) => {
+  const isEmail = (str: string) => /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(str);
+  if (user.first_name) return user.first_name;
+  if (user.username && !isEmail(user.username)) return user.username;
+  return `User ${user.id.slice(0, 8)}`;
+};
+
 const StartPrivateChatDialog: React.FC<StartPrivateChatDialogProps> = ({ onChatSelected }) => {
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -166,8 +173,8 @@ const StartPrivateChatDialog: React.FC<StartPrivateChatDialogProps> = ({ onChatS
                       <AvatarFallback>{user.username.charAt(0)}</AvatarFallback>
                     </Avatar>
                     <div className="flex-1">
-                      <p className="font-medium">{user.first_name || user.username}</p>
-                      <p className="text-xs text-muted-foreground">{user.username}</p>
+                      <p className="font-medium">{getDisplayName(user)}</p>
+                      <p className="text-xs text-muted-foreground">@{user.username}</p>
                     </div>
                   </div>
                 ))}

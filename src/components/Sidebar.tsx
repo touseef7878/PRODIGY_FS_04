@@ -335,7 +335,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onS
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between">
-                          <p className="font-medium truncate">{chat.other_user_profile.first_name || chat.other_user_profile.username}</p>
+                          <p className="font-medium truncate">{chat.other_user_profile.first_name || chat.other_user_profile.username || `User ${chat.other_user_profile.id.slice(0, 8)}`}</p>
                         </div>
                         <p className={chat.unread_count && chat.unread_count > 0 && chat.other_user_profile.id !== currentUserId ? "font-bold text-black truncate" : "text-xs text-muted-foreground truncate"}>
                           {chat.last_message_content?.substring(0, 30)}
