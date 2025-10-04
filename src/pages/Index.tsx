@@ -1,9 +1,10 @@
 "use client";
 
+
 import React, { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { useSession } from '@/components/SessionContextProvider'; // Import useSession
+import { useSession } from '@/components/SessionContextProvider';
+import '@/prochat-welcome.css';
 
 const Index: React.FC = () => {
   const { session } = useSession(); // Get session
@@ -22,34 +23,48 @@ const Index: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center auth-page text-white p-4 relative overflow-hidden">
-      {/* Background elements for aesthetic */}
-      <div className="absolute inset-0 z-0 opacity-30">
-        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-white rounded-full mix-blend-overlay filter blur-3xl animate-blob"></div>
-        <div className="absolute top-1/2 right-1/4 w-72 h-72 bg-yellow-300 rounded-full mix-blend-overlay filter blur-3xl animate-blob animation-delay-2000"></div>
-        <div className="absolute bottom-1/4 left-1/3 w-80 h-80 bg-pink-400 rounded-full mix-blend-overlay filter blur-3xl animate-blob animation-delay-4000"></div>
-      </div>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-background text-foreground relative overflow-hidden">
+      {/* Animated Blobs */}
+      <div className="prochat-blob prochat-blob1" />
+      <div className="prochat-blob prochat-blob2" />
+      <div className="prochat-blob prochat-blob3" />
 
-      <div className="relative z-10 text-center max-w-3xl mx-auto">
-        <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight tracking-tight">
-          Welcome to <span className="text-yellow-300 drop-shadow-lg">Prochat!</span>
+      <main className="relative z-10 flex flex-col items-center justify-center w-full max-w-2xl px-6 py-16">
+        <h1 className="prochat-hero text-6xl md:text-8xl font-black mb-4 leading-tight tracking-tight prochat-glow select-none drop-shadow-xl">
+          Prochat
         </h1>
-        <p className="mb-10 text-xl md:text-2xl font-light opacity-90">
-          Task 4 for Prodigy Infotec - Built by Touseef. Functional chat application with real-time messaging.
+        <p className="text-2xl md:text-3xl font-light mb-7 animate-fade-in text-center max-w-2xl mx-auto opacity-95 drop-shadow-sm">
+          <span className="font-semibold text-accent">Welcome!</span> Experience next-gen real-time chat with <span className="text-primary font-bold">Prochat</span>.<br/>
+          <span className="text-muted-foreground">A <span className="text-accent font-bold">self-practice project</span> by Touseef.</span>
         </p>
-        <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-6 justify-center">
+        <div className="mb-12 animate-fade-in flex flex-col items-center gap-2">
+          <span className="text-base md:text-lg text-muted-foreground flex items-center gap-2">
+            <span className="inline-block animate-bounce">🚀</span> Lightning fast.
+            <span className="inline-block animate-pulse">💬</span> Real-time.
+            <span className="inline-block animate-spin-slow">🌗</span> Beautiful in dark & light.
+          </span>
+          <span className="text-base md:text-lg text-muted-foreground">Open source. Secure. Made with <span className="text-red-400">❤️</span> in Pakistan.</span>
+        </div>
+        <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-8 justify-center animate-fade-in">
           <Link to="/login">
-            <button className="btn-accent text-lg px-8 py-4">
+            <button className="btn-accent text-lg px-10 py-4 shadow-2xl rounded-full font-semibold hover:scale-110 hover:shadow-accent transition-transform duration-200">
               Login
             </button>
           </Link>
           <Link to="/register">
-            <button className="btn-accent-outline text-lg px-8 py-4">
+            <button className="btn-accent-outline text-lg px-10 py-4 shadow-2xl rounded-full font-semibold hover:scale-110 hover:shadow-accent transition-transform duration-200">
               Sign Up
             </button>
           </Link>
         </div>
-      </div>
+        <div className="mt-16 text-center text-base md:text-lg text-muted-foreground animate-fade-in max-w-xl mx-auto">
+          <p>
+            <span className="font-semibold text-primary">Prochat</span> is a modern chat app built for speed, privacy, and fun.<br/>
+            Designed & developed as a <span className="text-accent font-bold">self-practice project</span> by <span className="text-accent font-bold">Touseef</span>.<br/>
+            <span className="italic text-sm text-muted-foreground">“Connect. Chat. Collaborate.”</span>
+          </p>
+        </div>
+      </main>
     </div>
   );
 };

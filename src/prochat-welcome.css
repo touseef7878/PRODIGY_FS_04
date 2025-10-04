@@ -1,0 +1,58 @@
+/* Prochat Welcome Animation */
+@keyframes prochat-fade-in {
+  0% { opacity: 0; transform: translateY(40px) scale(0.98); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes prochat-gradient-move {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.prochat-hero {
+  animation: prochat-fade-in 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+  background: linear-gradient(90deg, hsl(var(--primary-gradient-start)), hsl(var(--primary-gradient-end)), hsl(var(--accent-primary)));
+  background-size: 200% 200%;
+  animation-name: prochat-fade-in, prochat-gradient-move;
+  animation-duration: 1.2s, 8s;
+  animation-delay: 0s, 0s;
+  animation-iteration-count: 1, infinite;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1), linear;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-fill-color: transparent;
+}
+
+.prochat-glow {
+  filter: drop-shadow(0 0 32px hsl(var(--primary-gradient-end) / 0.5));
+}
+
+.prochat-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  opacity: 0.5;
+  z-index: 0;
+  animation: prochat-gradient-move 12s ease-in-out infinite alternate;
+}
+
+.prochat-blob1 {
+  width: 400px; height: 400px; left: -120px; top: 10vh;
+  background: radial-gradient(circle at 30% 30%, hsl(var(--primary-gradient-start)), transparent 70%);
+}
+.prochat-blob2 {
+  width: 350px; height: 350px; right: -100px; top: 40vh;
+  background: radial-gradient(circle at 70% 70%, hsl(var(--primary-gradient-end)), transparent 70%);
+}
+.prochat-blob3 {
+  width: 300px; height: 300px; left: 50vw; bottom: -120px;
+  background: radial-gradient(circle at 50% 50%, hsl(var(--accent-primary)), transparent 70%);
+}
+
+@media (max-width: 600px) {
+  .prochat-blob1, .prochat-blob2, .prochat-blob3 {
+    width: 180px !important;
+    height: 180px !important;
+  }
+}
