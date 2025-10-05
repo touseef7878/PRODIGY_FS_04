@@ -7,7 +7,7 @@ import { useSession } from '@/components/SessionContextProvider';
 import '@/prochat-welcome.css';
 
 const Index: React.FC = () => {
-  const { session } = useSession(); // Get session
+  const { session, loginAsGuest } = useSession(); // Get session and loginAsGuest 
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -16,6 +16,11 @@ const Index: React.FC = () => {
       navigate('/chat');
     }
   }, [session, navigate]);
+
+  const handleGuestLogin = React.useCallback(async () => {
+    await loginAsGuest();
+    navigate('/chat/guest');
+  }, [loginAsGuest, navigate]);
 
   // If loading or already logged in (and redirecting), don't render anything yet
   if (session) {
@@ -56,6 +61,16 @@ const Index: React.FC = () => {
               Sign Up
             </button>
           </Link>
+        </div>
+        
+        {/* Guest button */}
+        <div className="mt-6 animate-fade-in">
+          <button 
+            onClick={handleGuestLogin}
+            className="btn-accent-outline text-lg px-10 py-4 shadow-2xl rounded-full font-semibold hover:scale-110 hover:shadow-accent transition-transform duration-200 opacity-80 hover:opacity-100"
+          >
+            Continue as Guest
+          </button>
         </div>
         <div className="mt-16 text-center text-base md:text-lg text-muted-foreground animate-fade-in max-w-xl mx-auto">
           <p>

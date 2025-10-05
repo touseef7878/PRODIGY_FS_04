@@ -8,6 +8,8 @@ interface SessionContextType {
   session: Session | null;
   supabase: SupabaseClient;
   signOut: () => Promise<void>;
+  isGuest: boolean;
+  loginAsGuest: () => Promise<void>;
 }
 
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
@@ -26,6 +28,7 @@ interface SessionContextProviderProps {
 
 const SessionContextProvider: React.FC<SessionContextProviderProps> = ({ children }) => {
   const [session, setSession] = useState<Session | null>(null);
+  const [isGuest, setIsGuest] = useState<boolean>(false);
   const [loading, setLoading] = useState(true);
 
   // Add signOut function
@@ -34,12 +37,57 @@ const SessionContextProvider: React.FC<SessionContextProviderProps> = ({ childre
     if (error) {
       console.error('Error signing out:', error.message);
     }
+    setIsGuest(false);
+  }, []);
+
+  // Add loginAsGuest function
+  const loginAsGuest = useCallback(async () => {
+    // Create a guest session with a temporary user ID
+    const guestSession: Session = {
+      user: {
+        id: 'guest-' + Math.random().toString(36).substr(2, 9),
+        email: null,
+        user_metadata: {
+          username: 'Guest User',
+          first_name: 'Guest',
+          last_name: 'User',
+          avatar_url: null,
+        },
+        app_metadata: {},
+        created_at: new Date().toISOString(),
+      },
+      expires_at: null,
+      expires_in: null,
+      access_token: 'guest-token',
+      refresh_token: 'guest-refresh-token',
+      token_type: 'bearer',
+    };
+    
+    setSession(guestSession);
+    setIsGuest(true);
+    localStorage.setItem('guestSession', JSON.stringify(guestSession));
   }, []);
 
   useEffect(() => {
+    // Check for existing guest session in localStorage
+    const storedGuestSession = localStorage.getItem('guestSession');
+    if (storedGuestSession) {
+      try {
+        const parsedSession = JSON.parse(storedGuestSession);
+        setSession(parsedSession);
+        setIsGuest(true);
+        setLoading(false);
+        return;
+      } catch (e) {
+        console.error('Error parsing guest session from localStorage:', e);
+        localStorage.removeItem('guestSession');
+      }
+    }
+
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
+      setIsGuest(false);
       setLoading(false);
     });
 
@@ -48,6 +96,7 @@ const SessionContextProvider: React.FC<SessionContextProviderProps> = ({ childre
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
+      setIsGuest(false);
     });
 
     return () => {
@@ -60,7 +109,7 @@ const SessionContextProvider: React.FC<SessionContextProviderProps> = ({ childre
   }
 
   return (
-    <SessionContext.Provider value={{ session, supabase, signOut }}>
+    <SessionContext.Provider value={{ session, supabase, signOut, isGuest, loginAsGuest }}>
       {children}
     </SessionContext.Provider>
   );

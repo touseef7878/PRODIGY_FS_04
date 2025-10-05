@@ -3,11 +3,13 @@ import Index from "./pages/Index";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import ChatPage from "./pages/ChatPage";
+import GuestChatPage from "./pages/GuestChatPage";
 import NotFound from "./pages/NotFound";
 import AuthLayout from "./components/layout/AuthLayout";
 import { Toaster } from "@/components/ui/sonner";
 import SessionContextProvider from "./components/SessionContextProvider";
 import ProtectedRoute from "./components/ProtectedRoute";
+import GuestRoute from "./components/GuestRoute";
 import { ThemeProvider } from "@/components/theme-provider"; // Import ThemeProvider
 
 const App = () => (
@@ -32,13 +34,22 @@ const App = () => (
               </AuthLayout>
             }
           />
-          {/* Protect the /chat route */}
+          {/* Protect the /chat route - only for authenticated users */}
           <Route
             path="/chat"
             element={
               <ProtectedRoute>
                 <ChatPage />
               </ProtectedRoute>
+            }
+          />
+          {/* Allow guest access to /chat/guest */}
+          <Route
+            path="/chat/guest"
+            element={
+              <GuestRoute>
+                <GuestChatPage />
+              </GuestRoute>
             }
           />
           <Route path="*" element={<NotFound />} />
