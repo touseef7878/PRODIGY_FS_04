@@ -9,7 +9,7 @@ import { showError } from '@/utils/toast';
 import CreateChatRoomDialog from './CreateChatRoomDialog';
 import StartPrivateChatDialog from './StartPrivateChatDialog';
 import ProfileSettingsDialog from './ProfileSettingsDialog';
-import { Users, MessageSquare } from 'lucide-react';
+import { Users, MessageSquare, Lock } from 'lucide-react';
 
 interface ChatRoom {
   id: string;
@@ -54,21 +54,21 @@ const debounce = (func: Function, wait: number) => {
 };
 
 const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onSelectChat }) => {
-  const { supabase, session } = useSession();
+  const { supabase, session, isGuest } = useSession();
   const [chatRooms, setChatRooms] = useState<ChatRoom[]>([]);
   const [privateChats, setPrivateChats] = useState<PrivateChat[]>([]);
   const [loading, setLoading] = useState(true);
   const currentUserId = session?.user?.id;
 
   const fetchChats = useCallback(async () => {
-    if (!currentUserId) {
+    if (!currentUserId && !isGuest) {
       setLoading(false);
       return;
     }
 
     setLoading(true);
 
-    // Fetch public chat rooms
+    // Fetch public chat rooms (available to guests)
     try {
       const { data: publicRooms, error: publicError } = await supabase
         .from('chat_rooms')
@@ -80,20 +80,23 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onS
         showError("Failed to load public chat rooms: " + publicError.message);
         console.error("Error fetching public chat rooms:", publicError);
       } else if (publicRooms) {
-        // Fetch unread_count for each room using the RPC
+        // Fetch unread_count for each room using the RPC, but only for authenticated users
         rooms = await Promise.all(
           publicRooms.map(async (room: any) => {
             let unread_count = 0;
-            try {
-              const { data: unreadData, error: unreadError } = await supabase.rpc('get_unread_count', {
-                p_chat_room_id: room.id,
-                p_user_id: currentUserId
-              });
-              if (!unreadError && typeof unreadData === 'number') {
-                unread_count = unreadData;
+            // Only fetch unread count for authenticated users (not guests)
+            if (!isGuest && currentUserId) {
+              try {
+                const { data: unreadData, error: unreadError } = await supabase.rpc('get_unread_count', {
+                  p_chat_room_id: room.id,
+                  p_user_id: currentUserId
+                });
+                if (!unreadError && typeof unreadData === 'number') {
+                  unread_count = unreadData;
+                }
+              } catch (e) {
+                // ignore
               }
-            } catch (e) {
-              // ignore
             }
             return {
               id: room.id,
@@ -111,64 +114,69 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onS
       console.error(err);
     }
 
-    // Fetch private chats
-    try {
-      const { data: privateConvos, error: privateError } = await supabase
-        .from('private_chats')
-        .select(`id, user1_id, user2_id, user1:user1_id(id, username, first_name, last_name, avatar_url), user2:user2_id(id, username, first_name, last_name, avatar_url)`)
-        .order('id', { ascending: false });
+    // Fetch private chats (only for authenticated users)
+    if (!isGuest) {
+      try {
+        const { data: privateConvos, error: privateError } = await supabase
+          .from('private_chats')
+          .select(`id, user1_id, user2_id, user1:user1_id(id, username, first_name, last_name, avatar_url), user2:user2_id(id, username, first_name, last_name, avatar_url)`)
+          .order('id', { ascending: false });
 
-      let processedPrivateChats: (PrivateChat | null)[] = [];
-      if (privateError) {
-        showError("Failed to load private chats: " + privateError.message);
-        console.error("Error fetching private chats:", privateError);
-      } else if (privateConvos) {
-        processedPrivateChats = await Promise.all(
-          privateConvos.map(async (convo: any) => {
-            const user1Profile = convo.user1?.[0];
-            const user2Profile = convo.user2?.[0];
-            if (!user1Profile || !user2Profile) {
-              console.warn("Missing profile data for private chat:", convo.id);
-              return null;
-            }
-            const otherUser = user1Profile.id === currentUserId ? user2Profile : user1Profile;
-            let unread_count = 0;
-            try {
-              const { data: unreadData, error: unreadError } = await supabase.rpc('get_private_unread_count', {
-                p_private_chat_id: convo.id,
-                p_user_id: currentUserId
-              });
-              if (!unreadError && typeof unreadData === 'number') {
-                unread_count = unreadData;
+        let processedPrivateChats: (PrivateChat | null)[] = [];
+        if (privateError) {
+          showError("Failed to load private chats: " + privateError.message);
+          console.error("Error fetching private chats:", privateError);
+        } else if (privateConvos) {
+          processedPrivateChats = await Promise.all(
+            privateConvos.map(async (convo: any) => {
+              const user1Profile = convo.user1?.[0];
+              const user2Profile = convo.user2?.[0];
+              if (!user1Profile || !user2Profile) {
+                console.warn("Missing profile data for private chat:", convo.id);
+                return null;
               }
-            } catch (e) {
-              // ignore
-            }
-            return {
-              id: convo.id,
-              user1_id: convo.user1_id,
-              user2_id: convo.user2_id,
-              other_user_profile: otherUser,
-              last_message_content: '',
-              unread_count,
-            };
-          })
-        );
-        setPrivateChats(processedPrivateChats.filter(Boolean) as PrivateChat[]);
+              const otherUser = user1Profile.id === currentUserId ? user2Profile : user1Profile;
+              let unread_count = 0;
+              try {
+                const { data: unreadData, error: unreadError } = await supabase.rpc('get_private_unread_count', {
+                  p_private_chat_id: convo.id,
+                  p_user_id: currentUserId
+                });
+                if (!unreadError && typeof unreadData === 'number') {
+                  unread_count = unreadData;
+                }
+              } catch (e) {
+                // ignore
+              }
+              return {
+                id: convo.id,
+                user1_id: convo.user1_id,
+                user2_id: convo.user2_id,
+                other_user_profile: otherUser,
+                last_message_content: '',
+                unread_count,
+              };
+            })
+          );
+          setPrivateChats(processedPrivateChats.filter(Boolean) as PrivateChat[]);
+        }
+      } catch (err) {
+        showError("Unexpected error loading private chats.");
+        console.error(err);
       }
-    } catch (err) {
-      showError("Unexpected error loading private chats.");
-      console.error(err);
+    } else {
+      // For guests, set private chats to empty
+      setPrivateChats([]);
     }
 
     setLoading(false);
-  }, [currentUserId, supabase]);
+  }, [currentUserId, supabase, isGuest]);
 
   // Debounced version of fetchChats to reduce API calls on multiple events
   const debouncedFetchChats = useMemo(() => debounce(fetchChats, 500), [fetchChats]);
 
   useEffect(() => {
-    if (session) {
+    if (session || isGuest) {
       // Initial fetch
       fetchChats();
 
@@ -188,7 +196,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onS
           .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'private_messages' }, () => {
             debouncedFetchChats();
           })
-          .on('postgres_changes', { event: '*', schema: 'public', table: 'user_chat_read_status', filter: `user_id=eq.${session.user.id}` }, () => {
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'user_chat_read_status', filter: `user_id=eq.${session?.user?.id || 'none'}` }, () => {
             debouncedFetchChats();
           })
           .subscribe()
@@ -203,7 +211,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onS
         window.removeEventListener('sidebar:refetch', handleRefetch);
       };
     }
-  }, [session, debouncedFetchChats, supabase]);
+  }, [session, isGuest, debouncedFetchChats, supabase]);
 
   if (loading) {
     return (
@@ -219,38 +227,53 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedChatId, selectedChatType, onS
       <div className="p-4 border-b border-sidebar-border md:hidden">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-semibold">Chats</h2>
-          <div className="flex items-center space-x-3">
-            <CreateChatRoomDialog
-              onChatRoomCreated={fetchChats}
-              // Use a custom trigger for mobile (icon button)
-              triggerButtonClassName="p-2 rounded-full hover:bg-accent transition-colors"
-            />
-            <StartPrivateChatDialog
-              onChatSelected={(id, name, type) => {
-                onSelectChat(id, name, type);
-                fetchChats();
-              }}
-              triggerButtonClassName="p-2 rounded-full hover:bg-accent transition-colors"
-            />
-            <ProfileSettingsDialog
-              onProfileUpdated={fetchChats}
-              triggerButtonClassName="p-2 rounded-full hover:bg-accent transition-colors"
-            />
-          </div>
+          {!isGuest && (
+            <div className="flex items-center space-x-3">
+              <CreateChatRoomDialog
+                onChatRoomCreated={fetchChats}
+                // Use a custom trigger for mobile (icon button)
+                triggerButtonClassName="p-2 rounded-full hover:bg-accent transition-colors"
+              />
+              <StartPrivateChatDialog
+                onChatSelected={(id, name, type) => {
+                  onSelectChat(id, name, type);
+                  fetchChats();
+                }}
+                triggerButtonClassName="p-2 rounded-full hover:bg-accent transition-colors"
+              />
+              <ProfileSettingsDialog
+                onProfileUpdated={fetchChats}
+                triggerButtonClassName="p-2 rounded-full hover:bg-accent transition-colors"
+              />
+            </div>
+          )}
+          {isGuest && (
+            <div className="flex items-center space-x-2 text-muted-foreground">
+              <Lock className="h-4 w-4" />
+              <span className="text-sm">Guest Mode</span>
+            </div>
+          )}
         </div>
       </div>
       
       {/* Desktop Header */}
       <div className="hidden md:flex items-center justify-between p-4 border-b border-sidebar-border">
         <h2 className="text-xl font-semibold">Chats</h2>
-        <div className="flex items-center space-x-2">
-          <CreateChatRoomDialog onChatRoomCreated={fetchChats} />
-          <StartPrivateChatDialog onChatSelected={(id, name, type) => {
-            onSelectChat(id, name, type);
-            fetchChats();
-          }} />
-          <ProfileSettingsDialog onProfileUpdated={fetchChats} />
-        </div>
+        {!isGuest ? (
+          <div className="flex items-center space-x-2">
+            <CreateChatRoomDialog onChatRoomCreated={fetchChats} />
+            <StartPrivateChatDialog onChatSelected={(id, name, type) => {
+              onSelectChat(id, name, type);
+              fetchChats();
+            }} />
+            <ProfileSettingsDialog onProfileUpdated={fetchChats} />
+          </div>
+        ) : (
+          <div className="flex items-center space-x-2 text-muted-foreground">
+            <Lock className="h-4 w-4" />
+            <span className="text-sm">Guest Mode</span>
+          </div>
+        )}
       </div>
       
       <ScrollArea className="flex-1">

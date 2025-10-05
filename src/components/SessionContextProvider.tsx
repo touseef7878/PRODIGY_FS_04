@@ -38,6 +38,7 @@ const SessionContextProvider: React.FC<SessionContextProviderProps> = ({ childre
       console.error('Error signing out:', error.message);
     }
     setIsGuest(false);
+    localStorage.removeItem('guestSession');
   }, []);
 
   // Add loginAsGuest function
@@ -86,8 +87,15 @@ const SessionContextProvider: React.FC<SessionContextProviderProps> = ({ childre
 
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setIsGuest(false);
+      // Only set session if it's not a guest session (from localStorage)
+      if (!session) {
+        setSession(null);
+        setIsGuest(false);
+      } else {
+        // If there's an actual session from Supabase, it means user is logged in normally
+        setSession(session);
+        setIsGuest(false);
+      }
       setLoading(false);
     });
 
@@ -95,8 +103,21 @@ const SessionContextProvider: React.FC<SessionContextProviderProps> = ({ childre
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setIsGuest(false);
+      // If there's a guest session in localStorage, don't override it with null on logout
+      const storedGuestSession = localStorage.getItem('guestSession');
+      if (storedGuestSession && _event === 'SIGNED_OUT') {
+        try {
+          const parsedSession = JSON.parse(storedGuestSession);
+          setSession(parsedSession);
+          setIsGuest(true);
+        } catch (e) {
+          setSession(session);
+          setIsGuest(false);
+        }
+      } else {
+        setSession(session);
+        setIsGuest(false);
+      }
     });
 
     return () => {

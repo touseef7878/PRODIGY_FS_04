@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useCallback, memo } from 'react';
+import React, { useState, useCallback, useEffect, memo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import ChatLayout from '@/components/layout/ChatLayout';
 import { MadeWithProchat } from '@/components/MadeWithProchat';
 import MessageInput from '@/components/MessageInput';
@@ -19,7 +20,8 @@ interface PrivateChatNotificationQueryResult {
 }
 
 const GuestChatPage: React.FC = memo(() => {
-  const { supabase, session, isGuest } = useSession();
+  const { supabase, session, isGuest, signOut } = useSession();
+  const navigate = useNavigate();
   const [selectedChatId, setSelectedChatId] = useState<string | undefined>(undefined);
   const [selectedChatName, setSelectedChatName] = useState<string | undefined>(undefined);
   const [selectedChatType, setSelectedChatType] = useState<'public' | 'private' | undefined>(undefined);
@@ -38,11 +40,11 @@ const GuestChatPage: React.FC = memo(() => {
     setSelectedChatType(chatType);
   };
 
-  const handleBackToSidebar = () => {
+  const handleBackToSidebar = useCallback(() => {
     setSelectedChatId(undefined);
     setSelectedChatName(undefined);
     setSelectedChatType(undefined);
-  };
+  }, []);
 
   // Show a message to guest users about read-only mode
   const renderGuestMessage = () => {
@@ -61,6 +63,44 @@ const GuestChatPage: React.FC = memo(() => {
     // Do nothing for guests
   }, []);
 
+  // Handle browser close/unload for guests
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (isGuest) {
+        // Clear guest session so they return to welcome page
+        localStorage.removeItem('guestSession');
+      }
+    };
+
+    const handleUnload = () => {
+      if (isGuest) {
+        // Clear guest session so they return to welcome page
+        localStorage.removeItem('guestSession');
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('unload', handleUnload);
+
+    // Also set up a navigation guard to clear guest session when leaving
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('unload', handleUnload);
+      
+      // Only clear if this is a guest session when leaving
+      if (isGuest) {
+        localStorage.removeItem('guestSession');
+      }
+    };
+  }, [isGuest]);
+
+  // Handle back navigation for guests
+  const handleGuestBack = useCallback(() => {
+    // Clear guest session so they return to welcome page
+    localStorage.removeItem('guestSession');
+    navigate('/');
+  }, [navigate]);
+
   return (
     <div className="h-screen flex flex-col bg-background text-foreground">
       <React.Suspense fallback={<div className="h-screen flex items-center justify-center bg-background">Loading chat...</div>}>
@@ -73,7 +113,7 @@ const GuestChatPage: React.FC = memo(() => {
             />
           }
           isChatSelected={!!(selectedChatId && selectedChatType)}
-          onBackToSidebar={handleBackToSidebar}
+          onBackToSidebar={isMobile ? handleBackToSidebar : handleGuestBack}
         >
           <div className="flex h-full flex-col">
             {renderGuestMessage()}

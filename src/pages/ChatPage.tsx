@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useCallback, memo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import ChatLayout from '@/components/layout/ChatLayout';
 import { MadeWithProchat } from '@/components/MadeWithProchat';
 import MessageInput from '@/components/MessageInput';
@@ -19,7 +20,8 @@ interface PrivateChatNotificationQueryResult {
 }
 
 const ChatPage: React.FC = memo(() => {
-  const { supabase, session } = useSession();
+  const { supabase, session, isGuest } = useSession();
+  const navigate = useNavigate();
   const [selectedChatId, setSelectedChatId] = useState<string | undefined>(undefined);
   const [selectedChatName, setSelectedChatName] = useState<string | undefined>(undefined);
   const [selectedChatType, setSelectedChatType] = useState<'public' | 'private' | undefined>(undefined);
