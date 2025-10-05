@@ -35,7 +35,7 @@ const ChatPage: React.FC = memo(() => {
   const { messages, loadingMessages, sendMessage } = useChatMessages(selectedChatId, selectedChatType);
 
   const markChatAsRead = useCallback(async (chatId: string, chatType: 'public' | 'private') => {
-    if (!currentUserId) return;
+    if (!currentUserId || isGuest) return;
 
     const now = new Date().toISOString();
     let existingReadStatusQuery;
